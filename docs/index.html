@@ -8,33 +8,27 @@
 <style>
   :root {
     color-scheme: light;
-    --page: #f9f9f7;
-    --surface: #fcfcfb;
-    --ink: #0b0b0b;
-    --ink-2: #52514e;
-    --muted: #898781;
-    --grid: #e1e0d9;
-    --axis: #c3c2b7;
-    --border: rgba(11, 11, 11, 0.10);
-    --wash: rgba(11, 11, 11, 0.05);
-    --industry: #2a78d6;  /* 工業 */
-    --service: #eb6834;   /* 服務業 */
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      color-scheme: dark;
-      --page: #0d0d0d;
-      --surface: #1a1a19;
-      --ink: #f0efec;
-      --ink-2: #c3c2b7;
-      --muted: #898781;
-      --grid: #2c2c2a;
-      --axis: #383835;
-      --border: rgba(255, 255, 255, 0.10);
-      --wash: rgba(255, 255, 255, 0.07);
-      --industry: #3987e5;
-      --service: #d95926;
-    }
+    --page: #eef0f3;
+    --surface: #ffffff;
+    --tint: #f3f5f9;
+    --ink: #111827;
+    --ink-2: #4b5563;
+    --muted: #8a909a;
+    --grid: #e6e8ec;
+    --axis: #c5c9d0;
+    --border: rgba(17, 24, 39, 0.08);
+    --wash: rgba(17, 24, 39, 0.05);
+    --topbar: #1b2430;
+    --topbar-ink: #ffffff;
+    --topbar-ink-2: #b6c0cc;
+    /* 全站只用這一組：工業、服務業、選取的行業；其餘都是灰色 */
+    --industry: #2a78d6;
+    --service: #eb6834;
+    --accent: #c2187a;
+    --radius: 12px;
+    --gap: 16px;
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.07);
+    --shadow-hover: 0 2px 4px rgba(16, 24, 40, 0.06), 0 8px 20px rgba(16, 24, 40, 0.10);
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
@@ -44,75 +38,107 @@
     color: var(--ink);
     font: 15px/1.6 system-ui, -apple-system, "Segoe UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
   }
-  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
-  h1 { font-size: 26px; line-height: 1.3; margin: 0 0 6px; }
-  h2 { font-size: 17px; line-height: 1.4; margin: 0; }
-  h3 { font-size: 15px; margin: 20px 0 6px; }
-  p { margin: 0; }
-  .lede { color: var(--ink-2); margin-bottom: 4px; }
-  .source-line { color: var(--muted); font-size: 13px; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+  h1, h2, h3, p { margin: 0; }
 
-  .filters {
-    position: sticky; top: 0; z-index: 5;
-    display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: flex-start;
-    margin: 18px -16px 14px; padding: 10px 16px;
-    background: var(--page); border-bottom: 1px solid var(--border);
-  }
-  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-  .field > span:first-child { font-size: 12px; color: var(--ink-2); }
-  .field .hint { font-size: 12px; color: var(--muted); min-height: 0; }
+  /* ---- 深色標題列 ---- */
+  .topbar { background: var(--topbar); color: var(--topbar-ink); }
+  .topbar .wrap { display: flex; flex-wrap: wrap; gap: 12px 32px; align-items: center; justify-content: space-between; padding-top: 18px; padding-bottom: 18px; }
+  .topbar h1 { font-size: 24px; line-height: 1.3; font-weight: 700; }
+  .topbar .lede { color: var(--topbar-ink-2); font-size: 14px; margin-top: 2px; }
+  .topbar .meta { display: grid; grid-template-columns: max-content max-content; gap: 1px 10px; margin: 0; font-size: 12.5px; line-height: 1.6; }
+  .topbar .meta dt { color: var(--topbar-ink-2); }
+  .topbar .meta dd { margin: 0; color: var(--topbar-ink); }
+
+  /* ---- 固定在頂端的篩選列 ---- */
+  .filters { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: 0 2px 8px rgba(16, 24, 40, 0.06); }
+  .filters .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: flex-start; padding-top: 10px; padding-bottom: 10px; }
+  .field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .field > .field-label { font-size: 12px; color: var(--ink-2); }
+  .field .hint { font-size: 12px; color: var(--muted); }
+  .field .hint:empty { display: none; }
   .seg { display: flex; }
   .seg button {
-    font: inherit; font-size: 14px; min-width: 46px; height: 36px; padding: 0 10px;
+    font: inherit; font-size: 14px; min-width: 46px; height: 34px; padding: 0 10px;
     color: var(--ink); background: var(--surface);
     border: 1px solid var(--axis); border-left-width: 0; cursor: pointer;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: tabular-nums; transition: background-color .15s, color .15s;
   }
-  .seg button:first-child { border-left-width: 1px; border-radius: 6px 0 0 6px; }
-  .seg button:last-child { border-radius: 0 6px 6px 0; }
-  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); font-weight: 600; }
-  .seg button:disabled { cursor: not-allowed; color: var(--muted); background: var(--page); border-color: var(--grid); font-weight: 400; }
+  .seg button:first-child { border-left-width: 1px; border-radius: 8px 0 0 8px; }
+  .seg button:last-child { border-radius: 0 8px 8px 0; }
+  .seg button:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--tint); }
+  .seg button[aria-pressed="true"] { background: var(--topbar); color: #fff; border-color: var(--topbar); font-weight: 600; }
+  .seg button:disabled { cursor: not-allowed; color: var(--muted); background: var(--tint); border-color: var(--grid); font-weight: 400; }
   .seg button:disabled[aria-pressed="true"] { background: var(--grid); color: var(--ink-2); }
   select {
-    font: inherit; font-size: 14px; height: 36px; max-width: 100%; padding: 0 8px;
-    color: var(--ink); background: var(--surface); border: 1px solid var(--axis); border-radius: 6px;
+    font: inherit; font-size: 14px; height: 34px; max-width: 100%; padding: 0 8px;
+    color: var(--ink); background: var(--surface); border: 1px solid var(--axis); border-radius: 8px;
+    transition: border-color .15s;
   }
-  button:focus-visible, select:focus-visible, tr:focus-visible { outline: 2px solid var(--industry); outline-offset: 2px; }
+  select:hover { border-color: var(--ink-2); }
+  button:focus-visible, select:focus-visible, tr:focus-visible, summary:focus-visible { outline: 2px solid var(--industry); outline-offset: 2px; }
+
+  main.wrap { padding-top: var(--gap); padding-bottom: 48px; display: flex; flex-direction: column; gap: var(--gap); }
+
+  /* ---- 卡片 ---- */
+  .card, .kpi, .selection {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); min-width: 0;
+  }
+  .card, .kpi { transition: box-shadow .2s ease, transform .2s ease; }
+  .card:hover, .kpi:hover { box-shadow: var(--shadow-hover); }
+  .kpi:hover { transform: translateY(-1px); }
+  .card { padding: 18px 20px; display: flex; flex-direction: column; }
+  .card.wide { grid-column: 1 / -1; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
 
   .selection {
-    display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center;
-    min-height: 44px; padding: 8px 12px; margin-bottom: 14px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-    font-size: 14px; color: var(--ink-2);
+    display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center;
+    min-height: 44px; padding: 8px 14px; font-size: 13.5px; color: var(--ink-2);
   }
   .selection strong { color: var(--ink); }
   .selection button {
     font: inherit; font-size: 13px; padding: 3px 10px; margin-left: auto; cursor: pointer;
-    color: var(--ink); background: transparent; border: 1px solid var(--axis); border-radius: 6px;
+    color: var(--ink); background: transparent; border: 1px solid var(--axis); border-radius: 8px;
+    transition: background-color .15s;
   }
+  .selection button:hover { background: var(--tint); }
   .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: baseline; }
   .swatch.industry { background: var(--industry); }
   .swatch.service { background: var(--service); }
+  .swatch.accent { background: var(--accent); }
 
-  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
-  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; min-width: 0; }
-  .tile .label { font-size: 12px; color: var(--ink-2); }
-  .tile .value { font-size: 24px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
-  .tile .value.name { font-size: 17px; }
-  .tile .sub { font-size: 12px; color: var(--ink-2); }
+  /* ---- KPI ---- */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); }
+  .kpi { padding: 14px 18px; }
+  .kpi .label { font-size: 12.5px; color: var(--ink-2); }
+  .kpi .value { font-size: 32px; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; white-space: nowrap; }
+  .kpi .value small { font-size: 14px; font-weight: 500; color: var(--ink-2); margin-left: 4px; letter-spacing: 0; }
+  .kpi .sub { font-size: 12.5px; color: var(--ink-2); overflow-wrap: anywhere; }
+  .kpi .delta { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--grid); }
+  .kpi .delta b { color: var(--ink); font-weight: 700; margin-right: 6px; white-space: nowrap; }
 
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; min-width: 0; }
-  .card.wide { grid-column: 1 / -1; }
-  .card .scope { font-size: 13px; color: var(--ink-2); margin: 2px 0 8px; }
+  /* ---- 圖表卡片：標題 > 範圍 > 圖 > 註腳 > 觀察 ---- */
+  .card h2 { font-size: 16.5px; line-height: 1.4; font-weight: 650; }
+  .card .scope { font-size: 12.5px; color: var(--ink-2); margin: 2px 0 10px; }
   .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
   .legend .line-key { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--muted); margin-right: 6px; vertical-align: middle; }
   .legend .line-key.thin { border-top: 1px solid var(--axis); }
   .chart { width: 100%; }
   .chart svg { display: block; width: 100%; touch-action: pan-y; }
-  .note { font-size: 12px; color: var(--muted); margin-top: 8px; }
-  .insight { font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--grid); }
-  .insight b { font-weight: 600; }
+  .chart svg.fade-in { animation: fade-in .35s ease-out; }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .note { font-size: 11.5px; line-height: 1.6; color: var(--muted); margin-top: 10px; }
+  .insight {
+    display: flex; gap: 10px; align-items: flex-start;
+    margin-top: 12px; padding: 10px 12px; font-size: 13.5px; line-height: 1.65;
+    background: var(--tint); border-radius: 8px; color: var(--ink);
+  }
+  .card .insight { margin-top: auto; }
+  .card .note + .insight { margin-top: auto; }
+  .card .note { margin-bottom: 12px; }
+  .insight svg { flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--ink-2); }
+  .insight b { font-weight: 700; }
 
   svg text { font-family: inherit; fill: var(--ink-2); font-size: 12px; }
   svg .tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
@@ -125,84 +151,119 @@
   svg .axisline { stroke: var(--axis); stroke-width: 1; }
   svg .fill-industry { fill: var(--industry); }
   svg .fill-service { fill: var(--service); }
+  svg .fill-accent { fill: var(--accent); }
   svg .stroke-industry { stroke: var(--industry); }
   svg .stroke-service { stroke: var(--service); }
+  svg .stroke-accent { stroke: var(--accent); }
   svg .stroke-rest { stroke: var(--axis); }
   svg .ring { stroke: var(--surface); stroke-width: 2; }
   svg .sel-ring { stroke: var(--ink); stroke-width: 2; }
   svg .dim { opacity: 0.35; }
   svg .hit { fill: transparent; cursor: pointer; }
+  svg .hit.row { transition: fill .12s; }
+  svg .hit.row:hover { fill: var(--wash); }
   svg .rowbg { fill: var(--wash); }
+  svg .bar { transform-box: fill-box; transform-origin: 0 50%; }
   svg .trendline { stroke: var(--muted); stroke-width: 2; }
   svg .hover-ring { fill: none; stroke: var(--ink); stroke-width: 1.5; pointer-events: none; }
   svg .halo { stroke: var(--surface); stroke-width: 3; paint-order: stroke; stroke-linejoin: round; }
   svg .end-label { cursor: pointer; }
+  svg .end-label:hover { text-decoration: underline; }
 
   #tooltip {
     position: fixed; z-index: 20; pointer-events: none; display: none;
     max-width: 260px; padding: 8px 10px; font-size: 12px; line-height: 1.5;
     background: var(--surface); color: var(--ink-2);
-    border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-hover);
   }
   #tooltip .t-title { color: var(--ink); font-weight: 600; margin-bottom: 2px; }
   #tooltip .t-row { display: flex; justify-content: space-between; gap: 14px; }
   #tooltip .t-row b { color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
+  /* ---- 可收合的資料表 ---- */
+  details > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; border-radius: 6px; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::after { content: "展開 ▾"; font-size: 12.5px; color: var(--ink-2); border: 1px solid var(--axis); border-radius: 8px; padding: 2px 10px; white-space: nowrap; transition: background-color .15s; }
+  details[open] > summary::after { content: "收合 ▴"; }
+  details > summary:hover::after { background: var(--tint); }
   .table-wrap { overflow-x: auto; margin-top: 8px; }
   table { border-collapse: collapse; width: 100%; font-size: 13px; }
   th, td { padding: 6px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
-  th { color: var(--ink-2); font-weight: 600; vertical-align: bottom; }
+  th { color: var(--ink-2); font-weight: 600; vertical-align: bottom; font-size: 12.5px; }
   th small { display: block; font-weight: 400; color: var(--muted); }
   th:first-child, td:first-child { text-align: left; white-space: normal; min-width: 150px; }
   th:nth-child(2), td:nth-child(2) { text-align: left; }
-  tbody tr { cursor: pointer; }
-  tbody tr:hover { background: var(--wash); }
-  tbody tr.selected { background: var(--wash); font-weight: 600; }
+  tbody tr { cursor: pointer; transition: background-color .12s; }
+  tbody tr:hover { background: var(--tint); }
+  tbody tr.selected { background: var(--tint); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
 
-  .about { margin-top: 14px; }
-  .about ul, .about ol { margin: 4px 0 0; padding-left: 22px; }
+  .about { font-size: 14px; }
+  .about h3 { font-size: 14px; margin: 18px 0 6px; }
+  .about ul, .about ol { margin: 4px 0 0; padding-left: 22px; color: var(--ink-2); }
   .about li { margin-bottom: 4px; }
-  .about dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 8px 0 0; }
+  .about dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 10px 0 0; }
   .about dt { color: var(--ink-2); }
   .about dd { margin: 0; }
-  #error { display: none; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-top: 16px; }
+  #error { display: none; margin: 16px auto; max-width: 1160px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 
   @media (max-width: 760px) {
-    h1 { font-size: 21px; }
-    .tiles { grid-template-columns: 1fr 1fr; gap: 8px; }
-    .tile { padding: 10px; }
-    .tile .value { font-size: 20px; }
-    .tile .value.name { font-size: 15px; }
+    :root { --gap: 12px; }
+    .wrap { padding: 0 12px; }
+    .topbar .wrap { padding-top: 14px; padding-bottom: 14px; }
+    .topbar h1 { font-size: 20px; }
+    .topbar .lede { font-size: 13px; }
+    .topbar .meta { font-size: 12px; }
+    /* 篩選列在手機上也固定在頂端，所以排得很緊：第一列年份，第二列行業大類 + 名目／實質 */
+    .filters .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 8px; padding-top: 8px; padding-bottom: 8px; }
+    .field-year { grid-column: 1 / -1; }
+    .field > .field-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .field select { width: 100%; }
+    .field-year .seg button { flex: 1; min-width: 0; }
+    .field-pay .seg button { min-width: 50px; }
+    .field .hint { font-size: 11px; text-align: right; }
+    .tiles { grid-template-columns: 1fr 1fr; }
+    .kpi { padding: 10px 12px; }
+    .kpi .value { font-size: 24px; }
+    .kpi .value small { font-size: 12px; margin-left: 2px; }
     .grid { grid-template-columns: 1fr; }
-    .card { padding: 12px; }
-    .filters { position: static; gap: 10px; }
-    .field, .field select { width: 100%; }
-    .seg button { flex: 1; }
+    .card { padding: 14px 12px; }
+    .card h2 { font-size: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
   }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>高薪行業的工時比較長嗎？</h1>
-    <p class="lede">各行業受僱員工每人每月薪資與工時的關係，民國 109–114 年（西元 2020–2025 年）</p>
-    <p class="source-line">資料來源：行政院主計總處薪情平臺｜資料期間：109–114 年（年資料）｜下載日期：2026/10/12</p>
-  </header>
+<header class="topbar">
+  <div class="wrap">
+    <div>
+      <h1>高薪行業的工時比較長嗎？</h1>
+      <p class="lede">各行業受僱員工每人每月薪資與工時的關係（西元 2020–2025 年）</p>
+    </div>
+    <dl class="meta">
+      <dt>資料來源</dt><dd>行政院主計總處薪情平臺</dd>
+      <dt>資料期間</dt><dd>民國 109–114 年（年資料）</dd>
+      <dt>下載日期</dt><dd>2026/10/12</dd>
+    </dl>
+  </div>
+</header>
 
-  <div id="error"></div>
+<div id="error"></div>
 
-  <div id="app" hidden>
-    <div class="filters" role="group" aria-label="篩選條件">
-      <div class="field">
-        <span id="year-label">年份（民國）</span>
+<div id="app" hidden>
+  <div class="filters" role="group" aria-label="篩選條件">
+    <div class="wrap">
+      <div class="field field-year">
+        <span class="field-label" id="year-label">年份（民國）</span>
         <div class="seg" id="years" role="group" aria-labelledby="year-label"></div>
       </div>
-      <label class="field">
-        <span>行業大類（決定互相比較的對象）</span>
+      <label class="field field-scope">
+        <span class="field-label">行業大類（決定互相比較的對象）</span>
         <select id="scope"></select>
       </label>
-      <div class="field">
-        <span id="pay-label">薪資口徑</span>
+      <div class="field field-pay">
+        <span class="field-label" id="pay-label">薪資口徑</span>
         <div class="seg" id="pay-mode" role="group" aria-labelledby="pay-label">
           <button type="button" data-real="0">名目</button>
           <button type="button" data-real="1">實質</button>
@@ -210,7 +271,9 @@
         <span class="hint" id="pay-hint" aria-live="polite"></span>
       </div>
     </div>
+  </div>
 
+  <main class="wrap">
     <div class="selection" id="selection" aria-live="polite"></div>
 
     <section class="tiles" id="tiles" aria-label="重點數字"></section>
@@ -270,8 +333,11 @@
         <p class="insight" id="insight-hourly"></p>
       </article>
 
-      <article class="card wide">
-        <h2>資料表</h2>
+    </section>
+
+    <article class="card table-card">
+      <details open>
+        <summary><h2>資料表</h2></summary>
         <p class="scope" data-scope></p>
         <div class="table-wrap">
           <table id="table">
@@ -280,8 +346,8 @@
           </table>
         </div>
         <p class="note">註：圖上所有數字都在這張表裡，依總薪資由高到低排序；點任一列可以選取該行業。薪資、工時為每人每月平均，不可跨行業加總。時薪是「總薪資 ÷ 總工時」的估算，不是官方統計。</p>
-      </article>
-    </section>
+      </details>
+    </article>
 
     <section class="card about">
       <h2>資料說明與限制</h2>
@@ -311,8 +377,8 @@
         <li>教育業不含小學以上各級公私立學校。</li>
       </ul>
     </section>
-  </div>
-</main>
+  </main>
+</div>
 
 <div id="tooltip" role="status"></div>
 
@@ -434,6 +500,23 @@
     return { byPay, byHourly, shift, maxMove, movers };
   }
 
+  // ---------- 過渡動畫 ----------
+  // 每次重畫都是重建 SVG，所以記住上一次各圖形的位置，讓新圖形從舊位置滑到新位置。
+  // 版面（範圍、寬度、名目／實質）改變時位置無法對應，改成整張圖淡入。
+  let prevPos = new Map();
+  let nextPos = new Map();
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function tween(node, key, pos) {
+    nextPos.set(key, pos);
+    const old = prevPos.get(key);
+    if (!old || reduceMotion || !node.animate) return;
+    const dx = old.x - pos.x, dy = old.y - pos.y;
+    const k = pos.w ? old.w / pos.w : 1;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(k - 1) < 0.01) return;
+    node.animate([{ transform: `translate(${dx}px, ${dy}px) scaleX(${k})` }, { transform: 'translate(0px, 0px) scaleX(1)' }],
+      { duration: 350, easing: 'cubic-bezier(.2, .7, .3, 1)' });
+  }
+
   // ---------- tooltip ----------
   const tip = $('tooltip');
   let tipShownAt = 0;
@@ -536,10 +619,12 @@
 
     const draw = (p) => {
       const selected = p.name === state.selected;
-      svg.appendChild(el('circle', {
+      const dot = el('circle', {
         cx: p.cx, cy: p.cy, r: p.r,
-        class: `fill-${sectorClass(p.name)} ${selected ? 'sel-ring' : 'ring'}${state.selected && !selected ? ' dim' : ''}`,
-      }));
+        class: `fill-${selected ? 'accent' : sectorClass(p.name)} ${selected ? 'sel-ring' : 'ring'}${state.selected && !selected ? ' dim' : ''}`,
+      });
+      svg.appendChild(dot);
+      tween(dot, `scatter|${p.name}`, { x: p.cx, y: p.cy });
     };
     pts.filter((p) => !keys.includes(p)).forEach(draw);
     keys.filter((p) => p.name !== state.selected).forEach(draw);
@@ -672,11 +757,15 @@
       if (o.zero) {
         // 長條：基線端方角，資料端 4px 圓角
         const x0 = sx(0), w = Math.max(sx(v) - x0, 2), bh = 10, rr = Math.min(4, w);
-        g.appendChild(el('path', { class: `fill-${sectorClass(name)}`,
-          d: `M${x0},${cy - bh / 2}h${w - rr}a${rr},${rr} 0 0 1 ${rr},${rr}v${bh - 2 * rr}a${rr},${rr} 0 0 1 ${-rr},${rr}h${-(w - rr)}z` }));
+        const bar = el('path', { class: `bar fill-${selected ? 'accent' : sectorClass(name)}`,
+          d: `M${x0},${cy - bh / 2}h${w - rr}a${rr},${rr} 0 0 1 ${rr},${rr}v${bh - 2 * rr}a${rr},${rr} 0 0 1 ${-rr},${rr}h${-(w - rr)}z` });
+        g.appendChild(bar);
+        tween(bar, `${boxId}|bar|${name}`, { x: 0, y: 0, w: w });
       } else {
         g.appendChild(el('line', { class: 'gridline', x1: sx(ticks[0]), x2: sx(ticks[ticks.length - 1]), y1: cy, y2: cy }));
-        g.appendChild(el('circle', { class: `fill-${sectorClass(name)} ${selected ? 'sel-ring' : 'ring'}`, cx: sx(v), cy: cy, r: selected ? 6.5 : 5 }));
+        const dot = el('circle', { class: `fill-${selected ? 'accent' : sectorClass(name)} ${selected ? 'sel-ring' : 'ring'}`, cx: sx(v), cy: cy, r: selected ? 6.5 : 5 });
+        g.appendChild(dot);
+        tween(dot, `${boxId}|dot|${name}`, { x: sx(v), y: 0 });
       }
       g.appendChild(el('text', { class: 'val', x: plotRight + o.valueWidth, y: cy + 4, 'text-anchor': 'end', 'font-weight': weight }, o.value(v)));
       if (o.side) {
@@ -684,7 +773,8 @@
         g.appendChild(el('text', { class: 'side' + (s.strong ? ' strong' : ''), x: W - m.right, y: cy + 4, 'text-anchor': 'end' }, s.text));
       }
       svg.appendChild(g);
-      const hit = el('rect', { class: 'hit', x: 0, y: y, width: W, height: rowH });
+      tween(g, `${boxId}|row|${name}`, { x: 0, y: y });
+      const hit = el('rect', { class: 'hit row', x: 0, y: y, width: W, height: rowH, rx: 4 });
       hit.addEventListener('pointermove', (evt) => { if (!isTouch(evt)) showTip(evt, `${disp(name)}｜${state.year} 年`, industryRows(name)); });
       hit.addEventListener('pointerleave', (evt) => { if (!isTouch(evt)) hideTip(); });
       hit.addEventListener('click', (evt) => select(name, evt));
@@ -756,7 +846,9 @@
     });
     svg.appendChild(el('text', { class: 'axis-title', x: 0, y: 12 }, o.axisTitle));
     svg.appendChild(el('text', { class: 'axis-title', x: (m.left + plotRight) / 2, y: H - 6, 'text-anchor': 'middle' }, '年（民國）'));
-    svg.appendChild(el('line', { class: 'axisline', x1: sx(yi), x2: sx(yi), y1: m.top, y2: H - m.bottom, 'stroke-width': 2 }));
+    const marker = el('line', { class: 'axisline', x1: sx(yi), x2: sx(yi), y1: m.top, y2: H - m.bottom, 'stroke-width': 2 });
+    svg.appendChild(marker);
+    tween(marker, `${boxId}|year`, { x: sx(yi), y: 0 });
 
     const path = (name) => series(metric, name).map((v, i) => `${i ? 'L' : 'M'}${sx(i).toFixed(1)},${sy(v).toFixed(1)}`).join('');
     names.filter((n) => !highlighted.includes(n)).forEach((n) => {
@@ -765,10 +857,10 @@
     highlighted.filter((n) => n !== state.selected).concat(highlighted.filter((n) => n === state.selected)).forEach((n) => {
       const selected = n === state.selected;
       const s = series(metric, n);
-      svg.appendChild(el('path', { d: path(n), fill: 'none', class: `stroke-${sectorClass(n)}`,
+      svg.appendChild(el('path', { d: path(n), fill: 'none', class: `stroke-${selected ? 'accent' : sectorClass(n)}`,
         'stroke-width': selected ? 3 : 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round',
         opacity: state.selected && !selected ? 0.55 : 1 }));
-      if (selected) s.forEach((v, i) => svg.appendChild(el('circle', { class: `fill-${sectorClass(n)} ring`, cx: sx(i), cy: sy(v), r: 4.5 })));
+      if (selected) s.forEach((v, i) => svg.appendChild(el('circle', { class: 'fill-accent ring', cx: sx(i), cy: sy(v), r: 4.5 })));
       else svg.appendChild(el('circle', { class: `fill-${sectorClass(n)} ring`, cx: sx(lastI), cy: sy(s[lastI]), r: 4 }));
     });
 
@@ -813,7 +905,7 @@
     const labelX = plotRight + 14;
     labels.forEach((l) => {
       const mid = l.top + l.h / 2;
-      svg.appendChild(el('line', { class: `stroke-${sectorClass(l.name)}`, 'stroke-width': 1,
+      svg.appendChild(el('line', { class: `stroke-${l.name === state.selected ? 'accent' : sectorClass(l.name)}`, 'stroke-width': 1,
         x1: sx(lastI) + 5, y1: l.endY, x2: labelX - 3, y2: mid }));
       const text = el('text', { class: 'name end-label', x: labelX, y: l.top + 11,
         'font-weight': l.name === state.selected ? 700 : 400 });
@@ -834,6 +926,12 @@
       item.appendChild(document.createTextNode(`${s}底下的行業`));
       target.appendChild(item);
     });
+    if (state.selected) {
+      const item = h('span');
+      item.appendChild(h('span', 'swatch accent'));
+      item.appendChild(document.createTextNode('目前選取的行業'));
+      target.appendChild(item);
+    }
     (extra || []).forEach((e) => {
       const item = h('span');
       if (e.key) item.appendChild(h('span', 'line-key' + (e.key === 'thin' ? ' thin' : '')));
@@ -846,8 +944,15 @@
   function setInsight(id, sentences) {
     const p = $(id);
     p.textContent = '';
-    p.appendChild(h('b', '', '觀察：'));
-    p.appendChild(document.createTextNode(sentences.join('')));
+    // 小燈泡圖示
+    const icon = el('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2,
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' });
+    icon.appendChild(el('path', { d: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2.2h5c.1-1 .5-1.700 1.100-2.200A6 6 0 0 0 12 3z' }));
+    p.appendChild(icon);
+    const body = h('span');
+    body.appendChild(h('b', '', '觀察：'));
+    body.appendChild(document.createTextNode(sentences.join('')));
+    p.appendChild(body);
   }
 
   function describeR(r) {
@@ -900,8 +1005,8 @@
     if (state.selected) {
       const s = state.selected;
       const name = h('strong');
-      name.appendChild(h('span', `swatch ${sectorClass(s)}`));
-      name.appendChild(document.createTextNode(disp(s)));
+      name.appendChild(h('span', 'swatch accent'));
+      name.appendChild(document.createTextNode(`${disp(s)}（${byName[s].sector}）`));
       sel.appendChild(name);
       sel.appendChild(h('span', '', `${pay} ${fmtInt(val('pay', s))} 元（${n} 個中第 ${rs.shift[s].pay} 高）`));
       sel.appendChild(h('span', '', `總工時 ${fmtHours(val('hours', s))} 小時（第 ${hoursRank(s)} 長）`));
@@ -914,21 +1019,47 @@
       sel.appendChild(h('span', '', '點任一張圖上的行業（或資料表的一列），所有圖會同步高亮這個行業；再點一次取消。'));
     }
 
-    // 重點數字
+    // KPI：大數字 + 小標籤 + 與前一年相比的升降
     const tiles = $('tiles');
     tiles.textContent = '';
-    const tile = (label, value, sub, isName) => {
-      const t = h('div', 'tile');
+    const prevYear = D.years[yearIndex(state.year) - 1];
+    const arrow = (d, eps) => (Math.abs(d) < eps ? '＝' : d > 0 ? '▲' : '▼');
+    const pctDelta = (metric, name) => {
+      if (prevYear === undefined) return null;
+      const d = (val(metric, name) / val(metric, name, prevYear) - 1) * 100;
+      return { strong: `${arrow(d, 0.05)} ${Math.abs(d).toFixed(1)}%`, rest: `同一行業較 ${prevYear} 年` };
+    };
+    const kpi = (label, value, unit, sub, delta) => {
+      const t = h('div', 'kpi');
       t.appendChild(h('div', 'label', label));
-      t.appendChild(h('div', 'value' + (isName ? ' name' : ''), value));
+      const v = h('div', 'value', value);
+      if (unit) v.appendChild(h('small', '', unit));
+      t.appendChild(v);
       t.appendChild(h('div', 'sub', sub));
+      const d = h('div', 'delta');
+      if (delta) {
+        d.appendChild(h('b', '', delta.strong));
+        d.appendChild(document.createTextNode(delta.rest));
+      } else {
+        d.textContent = `${state.year} 年是第一年，沒有前一年可比`;
+      }
+      t.appendChild(d);
       tiles.appendChild(t);
     };
-    tile('薪資與工時的相關係數 r', fit ? fmtR(fit.r) : '—',
-      fit ? `${n} 個${level}，未加權` : '少於 3 個行業，不計算');
-    tile(`${pay}最高`, disp(topS), `${fmtInt(val('pay', topS))} 元｜工時 ${fmtHours(val('hours', topS))} 小時`, true);
-    tile('總工時最長', disp(topH), `${fmtHours(val('hours', topH))} 小時｜薪資 ${fmtInt(val('pay', topH))} 元`, true);
-    tile(`${hourlyName()}最高（估算）`, disp(rs.byHourly[0]), `${fmtInt(val('hourly', rs.byHourly[0]))} 元/小時｜月薪第 ${rs.shift[rs.byHourly[0]].pay} 名`, true);
+    let rDelta = null;
+    if (fit && prevYear !== undefined) {
+      const before = linearFit(names.map((x) => val('hours', x, prevYear)), names.map((x) => val('pay', x, prevYear)));
+      if (before) {
+        const d = fit.r - before.r;
+        rDelta = { strong: `${arrow(d, 0.005)} ${Math.abs(d).toFixed(2)}`, rest: `較 ${prevYear} 年（r 的差值）` };
+      }
+    }
+    const topHourly = rs.byHourly[0];
+    kpi('薪資與工時的相關係數 r', fit ? fmtR(fit.r) : '—', '', fit ? `${n} 個${level}，未加權` : '少於 3 個行業，不計算',
+      fit ? rDelta : { strong: '—', rest: '無法比較' });
+    kpi(`${pay}最高的行業`, fmtInt(val('pay', topS)), '元', `${disp(topS)}｜工時 ${fmtHours(val('hours', topS))} 小時`, pctDelta('pay', topS));
+    kpi('總工時最長的行業', fmtHours(val('hours', topH)), '小時', `${disp(topH)}｜薪資 ${fmtInt(val('pay', topH))} 元`, pctDelta('hours', topH));
+    kpi(`${hourlyName()}最高的行業（估算）`, fmtInt(val('hourly', topHourly)), '元/時', `${disp(topHourly)}｜月薪第 ${rs.shift[topHourly].pay} 名`, pctDelta('hourly', topHourly));
 
     // 圖 1
     const s1 = [];
@@ -1046,11 +1177,17 @@
   }
 
   let renderedWidth = 0;
+  let lastLayoutKey = '';
   function render() {
     renderControls();
     const width = $('chart-scatter').clientWidth;
     if (width < MIN_WIDTH) return;  // 還沒有版面寬度（例如分頁在背景）：等 ResizeObserver 再畫
     renderedWidth = width;
+    const layoutKey = [state.scope, useReal(), width].join('|');
+    const fading = layoutKey !== lastLayoutKey;
+    lastLayoutKey = layoutKey;
+    if (fading) prevPos = new Map();
+    nextPos = new Map();
     const boxes = Array.from(document.querySelectorAll('.chart'));
     boxes.forEach((b) => { b.style.minHeight = b.offsetHeight + 'px'; });
     const names = scopeNames();
@@ -1085,6 +1222,8 @@
     renderText(fit, med, rs, movers);
     renderTable();
     boxes.forEach((b) => { b.style.minHeight = ''; });
+    if (fading) document.querySelectorAll('.chart svg').forEach((svg) => svg.classList.add('fade-in'));
+    prevPos = nextPos;
   }
 
   // ---------- 啟動 ----------
