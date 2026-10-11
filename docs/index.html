@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
 <title>高薪行業的工時比較長嗎？各行業薪資與工時（109–114 年）</title>
 <style>
   :root {
@@ -53,22 +54,25 @@
 
   .filters {
     position: sticky; top: 0; z-index: 5;
-    display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: flex-end;
+    display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: flex-start;
     margin: 18px -16px 14px; padding: 10px 16px;
     background: var(--page); border-bottom: 1px solid var(--border);
   }
   .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-  .field > span { font-size: 12px; color: var(--ink-2); }
-  .years { display: flex; }
-  .years button {
-    font: inherit; font-size: 14px; min-width: 46px; height: 36px; padding: 0 8px;
+  .field > span:first-child { font-size: 12px; color: var(--ink-2); }
+  .field .hint { font-size: 12px; color: var(--muted); min-height: 0; }
+  .seg { display: flex; }
+  .seg button {
+    font: inherit; font-size: 14px; min-width: 46px; height: 36px; padding: 0 10px;
     color: var(--ink); background: var(--surface);
     border: 1px solid var(--axis); border-left-width: 0; cursor: pointer;
     font-variant-numeric: tabular-nums;
   }
-  .years button:first-child { border-left-width: 1px; border-radius: 6px 0 0 6px; }
-  .years button:last-child { border-radius: 0 6px 6px 0; }
-  .years button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); font-weight: 600; }
+  .seg button:first-child { border-left-width: 1px; border-radius: 6px 0 0 6px; }
+  .seg button:last-child { border-radius: 0 6px 6px 0; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); font-weight: 600; }
+  .seg button:disabled { cursor: not-allowed; color: var(--muted); background: var(--page); border-color: var(--grid); font-weight: 400; }
+  .seg button:disabled[aria-pressed="true"] { background: var(--grid); color: var(--ink-2); }
   select {
     font: inherit; font-size: 14px; height: 36px; max-width: 100%; padding: 0 8px;
     color: var(--ink); background: var(--surface); border: 1px solid var(--axis); border-radius: 6px;
@@ -103,6 +107,7 @@
   .card .scope { font-size: 13px; color: var(--ink-2); margin: 2px 0 8px; }
   .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
   .legend .line-key { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--muted); margin-right: 6px; vertical-align: middle; }
+  .legend .line-key.thin { border-top: 1px solid var(--axis); }
   .chart { width: 100%; }
   .chart svg { display: block; width: 100%; touch-action: pan-y; }
   .note { font-size: 12px; color: var(--muted); margin-top: 8px; }
@@ -114,20 +119,24 @@
   svg .axis-title { fill: var(--ink-2); font-size: 12px; }
   svg .name { fill: var(--ink); }
   svg .val { fill: var(--ink); font-variant-numeric: tabular-nums; }
+  svg .side { fill: var(--ink-2); font-size: 11px; font-variant-numeric: tabular-nums; }
+  svg .side.strong { fill: var(--ink); font-weight: 700; }
   svg .gridline { stroke: var(--grid); stroke-width: 1; }
   svg .axisline { stroke: var(--axis); stroke-width: 1; }
   svg .fill-industry { fill: var(--industry); }
   svg .fill-service { fill: var(--service); }
   svg .stroke-industry { stroke: var(--industry); }
   svg .stroke-service { stroke: var(--service); }
+  svg .stroke-rest { stroke: var(--axis); }
   svg .ring { stroke: var(--surface); stroke-width: 2; }
   svg .sel-ring { stroke: var(--ink); stroke-width: 2; }
-  svg .dim { opacity: 0.22; }
+  svg .dim { opacity: 0.35; }
   svg .hit { fill: transparent; cursor: pointer; }
   svg .rowbg { fill: var(--wash); }
   svg .trendline { stroke: var(--muted); stroke-width: 2; }
   svg .hover-ring { fill: none; stroke: var(--ink); stroke-width: 1.5; pointer-events: none; }
   svg .halo { stroke: var(--surface); stroke-width: 3; paint-order: stroke; stroke-linejoin: round; }
+  svg .end-label { cursor: pointer; }
 
   #tooltip {
     position: fixed; z-index: 20; pointer-events: none; display: none;
@@ -137,7 +146,7 @@
   }
   #tooltip .t-title { color: var(--ink); font-weight: 600; margin-bottom: 2px; }
   #tooltip .t-row { display: flex; justify-content: space-between; gap: 14px; }
-  #tooltip .t-row b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  #tooltip .t-row b { color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
   .table-wrap { overflow-x: auto; margin-top: 8px; }
   table { border-collapse: collapse; width: 100%; font-size: 13px; }
@@ -168,7 +177,7 @@
     .card { padding: 12px; }
     .filters { position: static; gap: 10px; }
     .field, .field select { width: 100%; }
-    .years button { flex: 1; }
+    .seg button { flex: 1; }
   }
 </style>
 </head>
@@ -186,12 +195,20 @@
     <div class="filters" role="group" aria-label="篩選條件">
       <div class="field">
         <span id="year-label">年份（民國）</span>
-        <div class="years" id="years" role="group" aria-labelledby="year-label"></div>
+        <div class="seg" id="years" role="group" aria-labelledby="year-label"></div>
       </div>
       <label class="field">
         <span>行業大類（決定互相比較的對象）</span>
         <select id="scope"></select>
       </label>
+      <div class="field">
+        <span id="pay-label">薪資口徑</span>
+        <div class="seg" id="pay-mode" role="group" aria-labelledby="pay-label">
+          <button type="button" data-real="0">名目</button>
+          <button type="button" data-real="1">實質</button>
+        </div>
+        <span class="hint" id="pay-hint" aria-live="polite"></span>
+      </div>
     </div>
 
     <div class="selection" id="selection" aria-live="polite"></div>
@@ -200,20 +217,20 @@
 
     <section class="grid">
       <article class="card wide">
-        <h2>圖 1　薪資與工時的關係</h2>
+        <h2 id="title-scatter"></h2>
         <p class="scope" data-scope></p>
         <div class="legend" id="legend-scatter"></div>
         <div class="chart" id="chart-scatter"></div>
-        <p class="note">註：每個點是一個行業，數值是該行業受僱員工的每人每月平均。兩軸都不從 0 開始；軸的範圍固定為 109–114 年的全距，方便跨年比較。趨勢線是未加權的最小平方直線（每個行業算一點，不依員工人數加權）；相關不代表因果。</p>
+        <p class="note">註：每個點是一個行業，數值是該行業受僱員工的每人每月平均。圖上只標出薪資最高、工時最長、工時最短和目前選取的行業，其他行業把滑鼠移上去或點一下就會顯示名稱、薪資、工時。兩軸都不從 0 開始；軸的範圍固定為 109–114 年的全距，方便跨年比較。趨勢線是未加權的最小平方直線（每個行業算一點，不依員工人數加權）；相關不代表因果。</p>
         <p class="insight" id="insight-scatter"></p>
       </article>
 
       <article class="card">
-        <h2>圖 2　各行業每人每月總薪資</h2>
+        <h2 id="title-salary"></h2>
         <p class="scope" data-scope></p>
         <div class="legend" data-sector-legend></div>
         <div class="chart" id="chart-salary"></div>
-        <p class="note">註：依總薪資由高到低排序。總薪資 = 經常性薪資 + 非經常性薪資（獎金、加班費等），是名目金額，未扣除物價。各行業的數字是平均值，不能相加。</p>
+        <p class="note" id="note-salary"></p>
         <p class="insight" id="insight-salary"></p>
       </article>
 
@@ -227,21 +244,30 @@
       </article>
 
       <article class="card">
-        <h2>圖 4　109–114 年每人每月總薪資的變化</h2>
+        <h2 id="title-trend-salary"></h2>
         <p class="scope" data-scope-trend></p>
-        <div class="legend" data-sector-legend></div>
+        <div class="legend" data-trend-legend></div>
         <div class="chart" id="chart-trend-salary"></div>
-        <p class="note">註：每條線是一個行業。名目薪資，未扣除物價，上升不等於購買力增加。縱軸不從 0 開始。直線標出目前選的年份。</p>
+        <p class="note" id="note-trend-salary"></p>
         <p class="insight" id="insight-trend-salary"></p>
       </article>
 
       <article class="card">
         <h2>圖 5　109–114 年每人每月總工時的變化</h2>
         <p class="scope" data-scope-trend></p>
-        <div class="legend" data-sector-legend></div>
+        <div class="legend" data-trend-legend></div>
         <div class="chart" id="chart-trend-hours"></div>
-        <p class="note">註：每條線是一個行業。年資料是全年各月的平均，工作日數每年不同，1–2 小時內的變動不宜過度解讀。縱軸不從 0 開始。直線標出目前選的年份。</p>
+        <p class="note">註：突顯規則：彩色粗線是 109→114 年總工時增減小時數（取絕對值）最大的 3 個行業，加上目前選取的行業，右端直接標出名稱；其餘行業是淡灰細線。年資料是全年各月的平均，工作日數每年不同，1–2 小時內的變動不宜過度解讀。縱軸不從 0 開始。直線標出目前選的年份。</p>
         <p class="insight" id="insight-trend-hours"></p>
+      </article>
+
+      <article class="card wide">
+        <h2 id="title-hourly"></h2>
+        <p class="scope" data-scope></p>
+        <div class="legend" id="legend-hourly"></div>
+        <div class="chart" id="chart-hourly"></div>
+        <p class="note" id="note-hourly"></p>
+        <p class="insight" id="insight-hourly"></p>
       </article>
 
       <article class="card wide">
@@ -249,19 +275,11 @@
         <p class="scope" data-scope></p>
         <div class="table-wrap">
           <table id="table">
-            <thead>
-              <tr>
-                <th>行業</th><th>部門</th>
-                <th>總薪資<small>元</small></th><th>經常性薪資<small>元</small></th>
-                <th>非經常性薪資<small>元</small></th><th>加班費<small>元</small></th>
-                <th>總工時<small>小時</small></th><th>正常工時<small>小時</small></th><th>加班工時<small>小時</small></th>
-                <th>受僱員工人數<small>人</small></th>
-              </tr>
-            </thead>
+            <thead></thead>
             <tbody></tbody>
           </table>
         </div>
-        <p class="note">註：圖上所有數字都在這張表裡，依總薪資由高到低排序；點任一列可以選取該行業。薪資、工時為每人每月平均，不可跨行業加總。</p>
+        <p class="note">註：圖上所有數字都在這張表裡，依總薪資由高到低排序；點任一列可以選取該行業。薪資、工時為每人每月平均，不可跨行業加總。時薪是「總薪資 ÷ 總工時」的估算，不是官方統計。</p>
       </article>
     </section>
 
@@ -271,7 +289,8 @@
         <dt>資料來源</dt><dd>行政院主計總處薪情平臺，行業別受僱員工薪資與工時統計</dd>
         <dt>資料期間</dt><dd>民國 109–114 年（西元 2020–2025 年），年資料</dd>
         <dt>下載日期</dt><dd>2026/10/12</dd>
-        <dt>使用指標</dt><dd>每人每月總薪資、經常性薪資、非經常性薪資、加班費（新臺幣元）；總工時、正常工時、加班工時（小時）；受僱員工人數（人）</dd>
+        <dt>使用指標</dt><dd>每人每月總薪資、經常性薪資、非經常性薪資、加班費（新臺幣元）；每人每月實質總薪資（新臺幣元，只用在 17 個大類）；總工時、正常工時、加班工時（小時）；受僱員工人數（人）</dd>
+        <dt>自行計算</dt><dd>時薪（元/小時）= 每人每月總薪資 ÷ 每人每月總工時；相關係數；名次與名次變動</dd>
       </dl>
 
       <h3>報表原本的註解</h3>
@@ -282,8 +301,10 @@
 
       <h3>限制</h3>
       <ul>
-        <li>報表中的「-」代表無資料，不是 0。「全年勞動報酬」和 5 個占勞動報酬比率的指標在原始檔中完全沒有數字，本頁沒有使用；實質薪資與兩個指數只有部分行業有值，也沒有使用。本頁用到的 8 個指標，每個行業每一年都有值。</li>
-        <li>薪資是名目金額，未扣除物價。跨年比較時，薪資上升有一部分只是物價上漲。</li>
+        <li>報表中的「-」代表無資料，不是 0。「全年勞動報酬」和 5 個占勞動報酬比率的指標在原始檔中完全沒有數字，本頁沒有使用。</li>
+        <li>預設顯示的薪資是名目金額，未扣除物價；跨年比較時，薪資上升有一部分只是物價上漲。把「薪資口徑」切到「實質」會改用報表的「每人每月實質總薪資」（已扣除物價，以民國 110 年為基期，所以 110 年的實質與名目金額相同）。</li>
+        <li>實質總薪資在原始檔中只有部門、17 個大類和礦業底下的 2 個中類有數字，94 個中類中有 92 個是「-」。所以「實質」只在比較 17 個大類時可以選，選到中類時切換會停用並顯示「中類無實質薪資資料」，圖表一律用名目薪資。經常性薪資指數、勞動生產力指數也只有部分行業有值，本頁沒有使用。</li>
+        <li>時薪是用兩個平均值相除的估算（每人每月總薪資 ÷ 每人每月總工時），不是官方統計，也不等於個別勞工實際領到的時薪；總薪資含獎金等非經常性薪資，所以也不能和基本工資的時薪直接比較。</li>
         <li>薪資和工時都是每人每月的平均值，不能跨行業相加，也不能直接取簡單平均當成全體的數字。本頁只做同一層級行業之間的比較：大類和大類比、中類和中類比，不把不同層級放在同一張圖。</li>
         <li>「餐館」「其他餐飲業」是中類「餐飲業」底下的小類，層級不同，所以沒有放進圖表。工業、服務業兩個部門只用來上色，不當作比較對象。</li>
         <li>相關係數把每個行業當成一點，沒有依員工人數加權，也只反映行業平均之間的關係，不能推論到個別勞工，更不代表因果。</li>
@@ -302,7 +323,9 @@
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const MAX_ROWS = 30;      // 超過這個數量，排名圖只畫前後各 TOP_ROWS 名
   const TOP_ROWS = 12;
-  const state = { year: null, scope: '大類', selected: null };
+  const HIGHLIGHT_TOP = 3;  // 圖 4、5 預設突顯變動幅度前幾名
+  const MIN_WIDTH = 120;    // 容器比這個窄（例如頁面還沒排版好）就先不畫
+  const state = { year: null, scope: '大類', selected: null, real: false };
   let D = null;
   let byName = {};
 
@@ -314,7 +337,24 @@
   const fmtWan = (n) => (n / 10000).toLocaleString('en-US', { maximumFractionDigits: 1 }) + ' 萬';
   const sectorClass = (name) => (byName[name].sector === '工業' ? 'industry' : 'service');
   const yearIndex = (y) => D.years.indexOf(y);
-  const val = (key, name, year) => D.values[key][name][yearIndex(year === undefined ? state.year : year)];
+
+  // 實質薪資只在比較 17 個大類時可用
+  const realAvailable = () => state.scope === '大類';
+  const useReal = () => state.real && realAvailable();
+  const payName = () => (useReal() ? '實質總薪資' : '總薪資');
+  const payAxis = () => (useReal() ? '每人每月實質總薪資（新臺幣元，110 年幣值）' : '每人每月總薪資（新臺幣元，名目）');
+  const hourlyName = () => (useReal() ? '實質時薪' : '時薪');
+
+  // 一個行業 6 年的數列。pay 會跟著名目／實質切換；hourly 是現算的估計值
+  function series(metric, name) {
+    if (metric === 'pay') return D.values[useReal() ? 'real_salary' : 'salary'][name];
+    if (metric === 'hourly') {
+      const pay = series('pay', name), hours = D.values.hours[name];
+      return pay.map((v, i) => v / hours[i]);
+    }
+    return D.values[metric][name];
+  }
+  const val = (metric, name, year) => series(metric, name)[yearIndex(year === undefined ? state.year : year)];
 
   function el(tag, attrs, text) {
     const node = document.createElementNS(SVG_NS, tag);
@@ -340,6 +380,7 @@
     return ticks;
   }
   const scale = (d0, d1, r0, r1) => (v) => r0 + ((v - d0) / (d1 - d0)) * (r1 - r0);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   function median(values) {
     const s = values.slice().sort((a, b) => a - b);
     const m = Math.floor(s.length / 2);
@@ -358,6 +399,7 @@
     if (!sxx || !syy) return null;
     return { r: sxy / Math.sqrt(sxx * syy), slope: sxy / sxx, intercept: my - (sxy / sxx) * mx };
   }
+  const overlaps = (a, b, pad) => a.x < b.x + b.w + pad && b.x < a.x + a.w + pad && a.y < b.y + b.h + pad && b.y < a.y + a.h + pad;
 
   // ---------- 目前的比較範圍 ----------
   function scopeNames() {
@@ -374,18 +416,29 @@
     return `${disp(state.scope)}底下的 ${n} 個中類`;
   }
   // 範圍內所有年份的最小、最大值（讓換年份時座標軸不動）
-  function extentAllYears(key, names) {
+  function extentAllYears(metric, names) {
     let lo = Infinity, hi = -Infinity;
-    names.forEach((n) => D.values[key][n].forEach((v) => { lo = Math.min(lo, v); hi = Math.max(hi, v); }));
+    names.forEach((n) => series(metric, n).forEach((v) => { lo = Math.min(lo, v); hi = Math.max(hi, v); }));
     return [lo, hi];
   }
-  function sortedBySalary(names) {
-    return names.slice().sort((a, b) => val('salary', b) - val('salary', a));
+  const sortedBy = (metric, names) => names.slice().sort((a, b) => val(metric, b) - val(metric, a));
+
+  // 圖 6 用：月薪排名、時薪排名、名次變動（正數 = 換算成時薪後名次前進）
+  function rankShift(names) {
+    const byPay = sortedBy('pay', names), byHourly = sortedBy('hourly', names);
+    const shift = {};
+    names.forEach((n) => { shift[n] = { pay: byPay.indexOf(n) + 1, hourly: byHourly.indexOf(n) + 1 }; });
+    names.forEach((n) => { shift[n].delta = shift[n].pay - shift[n].hourly; });
+    const maxMove = Math.max.apply(null, names.map((n) => Math.abs(shift[n].delta)));
+    const movers = maxMove > 0 ? byHourly.filter((n) => Math.abs(shift[n].delta) === maxMove) : [];
+    return { byPay, byHourly, shift, maxMove, movers };
   }
 
   // ---------- tooltip ----------
   const tip = $('tooltip');
+  let tipShownAt = 0;
   function showTip(evt, title, rows) {
+    tipShownAt = performance.now();
     tip.textContent = '';
     tip.appendChild(h('div', 't-title', title));
     rows.forEach(([label, value]) => {
@@ -399,25 +452,31 @@
     let x = evt.clientX + 14, y = evt.clientY + 14;
     if (x + w > window.innerWidth - 8) x = evt.clientX - w - 14;
     if (y + ht > window.innerHeight - 8) y = evt.clientY - ht - 14;
-    tip.style.left = Math.max(8, x) + 'px';
+    tip.style.left = clamp(x, 8, Math.max(8, window.innerWidth - w - 8)) + 'px';
     tip.style.top = Math.max(8, y) + 'px';
   }
   const hideTip = () => { tip.style.display = 'none'; };
   function industryRows(name, year) {
-    return [
-      ['總薪資', fmtInt(val('salary', name, year)) + ' 元'],
-      ['　經常性薪資', fmtInt(val('regular', name, year)) + ' 元'],
-      ['總工時', fmtHours(val('hours', name, year)) + ' 小時'],
-      ['　加班工時', fmtHours(val('overtime_hours', name, year)) + ' 小時'],
-      ['受僱員工人數', fmtInt(val('employees', name, year)) + ' 人'],
-    ];
+    const rows = [[payName(), fmtInt(val('pay', name, year)) + ' 元']];
+    if (useReal()) rows.push(['　名目總薪資', fmtInt(val('salary', name, year)) + ' 元']);
+    else rows.push(['　經常性薪資', fmtInt(val('regular', name, year)) + ' 元']);
+    rows.push(['總工時', fmtHours(val('hours', name, year)) + ' 小時']);
+    rows.push(['　加班工時', fmtHours(val('overtime_hours', name, year)) + ' 小時']);
+    rows.push([hourlyName() + '（估算）', fmtInt(val('hourly', name, year)) + ' 元/小時']);
+    rows.push(['受僱員工人數', fmtInt(val('employees', name, year)) + ' 人']);
+    return rows;
   }
   const isTouch = (evt) => evt.pointerType === 'touch';
 
-  function select(name) {
+  // 點一下：選取（再點一次取消），並在點的位置留一個 tooltip，手機沒有 hover 也看得到名稱和數字
+  function select(name, evt, year) {
     state.selected = state.selected === name ? null : name;
     hideTip();
     render();
+    if (evt && state.selected === name) {
+      const yr = year === undefined ? state.year : year;
+      showTip(evt, `${disp(name)}｜${yr} 年`, industryRows(name, yr));
+    }
   }
 
   // ---------- 圖 1：散布圖 ----------
@@ -426,18 +485,19 @@
     box.textContent = '';
     const names = scopeNames();
     const W = box.clientWidth;
-    const narrow = W < 520;
-    const H = narrow ? 320 : 400;
+    const narrow = W < 600;
+    const H = narrow ? 340 : 400;
     const m = { top: 26, right: 16, bottom: 44, left: narrow ? 44 : 52 };
     const [x0, x1] = extentAllYears('hours', names);
-    const [y0, y1] = extentAllYears('salary', names);
+    const [y0, y1] = extentAllYears('pay', names);
     const padX = Math.max((x1 - x0) * 0.06, 0.5), padY = Math.max((y1 - y0) * 0.06, 500);
     const xt = niceTicks(x0 - padX, x1 + padX, narrow ? 4 : 7);
     const yt = niceTicks(y0 - padY, y1 + padY, 5);
     const sx = scale(xt[0], xt[xt.length - 1], m.left, W - m.right);
     const sy = scale(yt[0], yt[yt.length - 1], H - m.bottom, m.top);
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img',
-      'aria-label': `散布圖：${state.year} 年${scopeText()}的每人每月總工時與總薪資` });
+      'aria-label': `散布圖：${state.year} 年${scopeText()}的每人每月總工時與${payName()}` });
+    box.appendChild(svg);  // 先放進頁面，後面才量得到文字寬度
 
     yt.forEach((t) => {
       svg.appendChild(el('line', { class: 'gridline', x1: m.left, x2: W - m.right, y1: sy(t), y2: sy(t) }));
@@ -448,57 +508,77 @@
       svg.appendChild(el('text', { class: 'tick', x: sx(t), y: H - m.bottom + 16, 'text-anchor': 'middle' }, String(t)));
     });
     svg.appendChild(el('line', { class: 'axisline', x1: m.left, x2: W - m.right, y1: H - m.bottom, y2: H - m.bottom }));
-    svg.appendChild(el('text', { class: 'axis-title', x: 0, y: 12 }, '每人每月總薪資（新臺幣元）'));
+    svg.appendChild(el('text', { class: 'axis-title', x: 0, y: 12 }, payAxis()));
     svg.appendChild(el('text', { class: 'axis-title', x: (m.left + W - m.right) / 2, y: H - 6, 'text-anchor': 'middle' }, '每人每月總工時（小時）'));
 
-    const pts = names.map((n) => ({ name: n, hx: val('hours', n), sy: val('salary', n) }))
+    const pts = names.map((n) => ({ name: n, hx: val('hours', n), sy: val('pay', n) }))
       .map((p) => Object.assign(p, { cx: sx(p.hx), cy: sy(p.sy) }));
 
     // 趨勢線（至少 3 個行業才畫）
     const fit = pts.length >= 3 ? linearFit(pts.map((p) => p.hx), pts.map((p) => p.sy)) : null;
     if (fit) {
-      const clipId = 'clip-scatter';
-      const clip = el('clipPath', { id: clipId });
-      clip.appendChild(el('rect', { x: m.left, y: m.top, width: W - m.right - m.left, height: H - m.bottom - m.top }));
+      const clip = el('clipPath', { id: 'clip-scatter' });
+      clip.appendChild(el('rect', { x: m.left, y: m.top, width: Math.max(0, W - m.right - m.left), height: H - m.bottom - m.top }));
       svg.appendChild(clip);
       const a = xt[0], b = xt[xt.length - 1];
-      svg.appendChild(el('line', { class: 'trendline', 'clip-path': `url(#${clipId})`,
+      svg.appendChild(el('line', { class: 'trendline', 'clip-path': 'url(#clip-scatter)',
         x1: sx(a), y1: sy(fit.intercept + fit.slope * a), x2: sx(b), y2: sy(fit.intercept + fit.slope * b) }));
     }
 
-    const r = names.length > 40 ? 4 : 5;
+    // 關鍵行業：選取的、薪資最高、工時最長、工時最短（最多 4 個），只有它們有標籤
+    const top = (f) => pts.reduce((a, b) => (f(b) > f(a) ? b : a));
+    const keys = [];
+    [pts.find((p) => p.name === state.selected), top((p) => p.sy), top((p) => p.hx), top((p) => -p.hx)]
+      .forEach((p) => { if (p && !keys.includes(p)) keys.push(p); });
+    const keyR = 5;
+    const restR = narrow ? 3 : (names.length > 40 ? 4 : 5);  // 手機上其他點縮小
+    pts.forEach((p) => { p.r = p.name === state.selected ? keyR + 2 : keys.includes(p) ? keyR : restR; });
+
     const draw = (p) => {
       const selected = p.name === state.selected;
       svg.appendChild(el('circle', {
-        cx: p.cx, cy: p.cy, r: selected ? r + 2 : r,
+        cx: p.cx, cy: p.cy, r: p.r,
         class: `fill-${sectorClass(p.name)} ${selected ? 'sel-ring' : 'ring'}${state.selected && !selected ? ' dim' : ''}`,
       }));
     };
-    pts.filter((p) => p.name !== state.selected).forEach(draw);
-    pts.filter((p) => p.name === state.selected).forEach(draw);
+    pts.filter((p) => !keys.includes(p)).forEach(draw);
+    keys.filter((p) => p.name !== state.selected).forEach(draw);
+    keys.filter((p) => p.name === state.selected).forEach(draw);
 
-    // 只標幾個點：選取的、薪資最高、工時最長、工時最短
-    const top = (f) => pts.reduce((a, b) => (f(b) > f(a) ? b : a));
-    const wanted = [];
-    [pts.find((p) => p.name === state.selected), top((p) => p.sy), top((p) => p.hx), top((p) => -p.hx)]
-      .forEach((p) => { if (p && !wanted.includes(p)) wanted.push(p); });
-    const placed = [];
-    wanted.forEach((p) => {
-      const text = disp(p.name);
-      const tw = text.length * 12.5;
-      const right = p.cx + r + 6 + tw <= W - 2;
-      const left = p.cx - r - 6 - tw >= m.left;
-      if (!right && !left) return;  // 兩邊都放不下就不標，名稱在 tooltip 和表格裡
-      const bx = right ? p.cx + r + 6 : p.cx - r - 6 - tw;
-      const by = p.cy - 8;
-      if (placed.some((q) => bx < q.x + q.w && q.x < bx + tw && by < q.y + 18 && q.y < by + 18)) return;
-      placed.push({ x: bx, y: by, w: tw });
-      svg.appendChild(el('text', { class: 'name halo', x: right ? bx : bx + tw, y: p.cy + 4,
-        'text-anchor': right ? 'start' : 'end' }, text));
+    // 標籤：依序試右、左、上、下（必要時再遠一點），要完全在圖框內、不壓到別的標籤和關鍵點
+    const frame = { x0: m.left + 3, x1: W - 2, y0: m.top, y1: H - m.bottom - 2 };
+    const obstacles = keys.map((p) => ({ x: p.cx - p.r - 1, y: p.cy - p.r - 1, w: 2 * p.r + 2, h: 2 * p.r + 2, owner: p }));
+    const th = 15;
+    keys.forEach((p) => {
+      const text = el('text', { class: 'name halo', x: 0, y: -100, 'font-weight': p.name === state.selected ? 600 : 400 }, disp(p.name));
+      svg.appendChild(text);
+      const tw = text.getComputedTextLength();
+      const cxClamped = clamp(p.cx - tw / 2, frame.x0, Math.max(frame.x0, frame.x1 - tw));
+      const g = p.r + 5;
+      const spots = [
+        { x: p.cx + g, y: p.cy - th / 2 },
+        { x: p.cx - g - tw, y: p.cy - th / 2 },
+        { x: cxClamped, y: p.cy - g - th },
+        { x: cxClamped, y: p.cy + g },
+        { x: cxClamped, y: p.cy - g - 2 * th - 2 },
+        { x: cxClamped, y: p.cy + g + th + 2 },
+        { x: cxClamped, y: p.cy - g - 3 * th - 4 },
+        { x: cxClamped, y: p.cy + g + 2 * th + 4 },
+      ];
+      // 合格的位置裡，挑蓋到最少其他點的（同分時維持上面的優先順序）
+      const covered = (b) => pts.filter((q) => q !== p && overlaps(b, { x: q.cx - q.r, y: q.cy - q.r, w: 2 * q.r, h: 2 * q.r }, 0)).length;
+      const spot = spots.map((s) => ({ x: s.x, y: s.y, w: tw, h: th })).filter((b) =>
+        b.x >= frame.x0 && b.x + b.w <= frame.x1 && b.y >= frame.y0 && b.y + b.h <= frame.y1 &&
+        !obstacles.some((o) => o.owner !== p && overlaps(b, o, 2)))
+        .map((b, i) => ({ b, i, c: covered(b) })).sort((a, z) => a.c - z.c || a.i - z.i).map((x) => x.b)[0];
+      if (!spot) { text.remove(); return; }  // 真的放不下就不標，名稱仍在 tooltip 和資料表
+      obstacles.push(spot);
+      text.setAttribute('x', spot.x);
+      text.setAttribute('y', spot.y + 11.5);
     });
 
-    // 最近點：滑鼠不必剛好壓在點上
-    const hover = el('circle', { class: 'hover-ring', r: r + 4, visibility: 'hidden' });
+    // 最近點：滑鼠或手指不必剛好壓在點上
+    const hover = el('circle', { class: 'hover-ring', r: keyR + 4, visibility: 'hidden' });
     svg.appendChild(hover);
     const hit = el('rect', { class: 'hit', x: 0, y: 0, width: W, height: H });
     svg.appendChild(hit);
@@ -519,52 +599,57 @@
       hover.setAttribute('cx', p.cx); hover.setAttribute('cy', p.cy); hover.setAttribute('visibility', 'visible');
       showTip(evt, `${disp(p.name)}｜${state.year} 年`, industryRows(p.name));
     });
-    hit.addEventListener('pointerleave', () => { hover.setAttribute('visibility', 'hidden'); hideTip(); });
-    hit.addEventListener('click', (evt) => { const p = nearest(evt); if (p) select(p.name); });
-    box.appendChild(svg);
+    hit.addEventListener('pointerleave', (evt) => { if (isTouch(evt)) return; hover.setAttribute('visibility', 'hidden'); hideTip(); });
+    hit.addEventListener('click', (evt) => { const p = nearest(evt); if (p) select(p.name, evt); });
     return fit;
   }
 
-  // ---------- 圖 2、3：依薪資排序的排名圖 ----------
-  // 回傳要畫的列；行業太多時只留前後各 TOP_ROWS 名（加上被選取的那一個）
-  function rankRows(sorted) {
-    const rows = sorted.map((name, i) => ({ name, rank: i + 1 }));
+  // ---------- 圖 2、3、6：排名圖 ----------
+  // 回傳要畫的列；行業太多時只留前後各 TOP_ROWS 名（加上被選取和指定要留的）
+  function rankRows(order, keep) {
+    const rows = order.map((name, i) => ({ name, rank: i + 1 }));
     if (rows.length <= MAX_ROWS) return rows;
-    const keep = rows.filter((r) => r.rank <= TOP_ROWS || r.rank > rows.length - TOP_ROWS || r.name === state.selected);
+    const kept = rows.filter((r) => r.rank <= TOP_ROWS || r.rank > rows.length - TOP_ROWS ||
+      r.name === state.selected || (keep || []).includes(r.name));
     const out = [];
-    keep.forEach((r, i) => {
-      if (i > 0 && r.rank - keep[i - 1].rank > 1) out.push({ gap: r.rank - keep[i - 1].rank - 1 });
+    kept.forEach((r, i) => {
+      if (i > 0 && r.rank - kept[i - 1].rank > 1) out.push({ gap: r.rank - kept[i - 1].rank - 1 });
       out.push(r);
     });
     return out;
   }
 
-  function renderRank(boxId, key, opts) {
+  // o: { metric, order, zero, median, label, axisTitle, tick, value, valueWidth, side(name), sideWidth, keep }
+  function renderRank(boxId, o) {
     const box = $(boxId);
     box.textContent = '';
     const names = scopeNames();
-    const rows = rankRows(sortedBySalary(names));
+    const rows = rankRows(o.order, o.keep);
     const W = box.clientWidth;
-    const rowH = 36, gapH = 26;
-    const m = { top: 4, right: 12, bottom: 40, left: 2 };
+    const rowH = 38, gapH = 26;
+    const sideW = o.side ? o.sideWidth : 0;
+    const m = { top: 4, right: 4, bottom: 40, left: 2 };
+    const plotRight = Math.max(m.left + 40, W - m.right - o.valueWidth - sideW);
     const plotH = rows.reduce((a, r) => a + (r.gap ? gapH : rowH), 0);
     const H = m.top + plotH + m.bottom;
-    const [lo, hi] = extentAllYears(key, names);
-    const ticks = opts.zero ? niceTicks(0, hi, W < 420 ? 3 : 5) : niceTicks(lo - 1, hi + 1, W < 420 ? 3 : 5);
-    const sx = scale(ticks[0], ticks[ticks.length - 1], m.left + (opts.zero ? 0 : 8), W - m.right - (opts.zero ? 0 : 8));
+    const [lo, hi] = extentAllYears(o.metric, names);
+    const nTicks = plotRight - m.left < 260 ? 3 : 5;
+    const ticks = o.zero ? niceTicks(0, hi, nTicks) : niceTicks(lo - 1, hi + 1, nTicks);
+    const inset = o.zero ? 0 : 8;
+    const sx = scale(ticks[0], ticks[ticks.length - 1], m.left + inset, plotRight - inset);
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img',
-      'aria-label': `${opts.label}：${state.year} 年${scopeText()}，依總薪資由高到低排列` });
+      'aria-label': `${o.label}：${state.year} 年${scopeText()}` });
 
     ticks.forEach((t) => {
       svg.appendChild(el('line', { class: 'gridline', x1: sx(t), x2: sx(t), y1: m.top, y2: m.top + plotH }));
-      const anchor = sx(t) < 14 ? 'start' : sx(t) > W - 20 ? 'end' : 'middle';
-      svg.appendChild(el('text', { class: 'tick', x: sx(t), y: m.top + plotH + 15, 'text-anchor': anchor }, opts.tick(t)));
+      const anchor = sx(t) < 14 ? 'start' : 'middle';
+      svg.appendChild(el('text', { class: 'tick', x: sx(t), y: m.top + plotH + 15, 'text-anchor': anchor }, o.tick(t)));
     });
-    svg.appendChild(el('text', { class: 'axis-title', x: W / 2, y: H - 6, 'text-anchor': 'middle' }, opts.axisTitle));
+    svg.appendChild(el('text', { class: 'axis-title', x: m.left, y: H - 6 }, o.axisTitle));
 
     let med = null;
-    if (opts.median && names.length >= 3) {
-      med = median(names.map((n) => val(key, n)));
+    if (o.median && names.length >= 3) {
+      med = median(names.map((n) => val(o.metric, n)));
       svg.appendChild(el('line', { class: 'axisline', x1: sx(med), x2: sx(med), y1: m.top, y2: m.top + plotH, 'stroke-width': 2 }));
     }
 
@@ -572,18 +657,19 @@
     rows.forEach((row) => {
       if (row.gap) {
         svg.appendChild(el('text', { class: 'tick', x: W / 2, y: y + 17, 'text-anchor': 'middle' },
-          `⋯ 中間 ${row.gap} 個行業省略，完整數字見下方資料表 ⋯`));
+          W < 420 ? `⋯ 中間 ${row.gap} 個行業省略（見資料表）⋯` : `⋯ 中間 ${row.gap} 個行業省略，完整數字見下方資料表 ⋯`));
         y += gapH;
         return;
       }
-      const name = row.name, v = val(key, name);
+      const name = row.name, v = val(o.metric, name);
       const selected = name === state.selected;
       const g = el('g', state.selected && !selected ? { class: 'dim' } : {});
       if (selected) svg.appendChild(el('rect', { class: 'rowbg', x: 0, y: y, width: W, height: rowH, rx: 4 }));
-      g.appendChild(el('text', { class: 'name', x: m.left + 2, y: y + 14, 'font-weight': selected ? 600 : 400 }, `${row.rank}. ${disp(name)}`));
-      g.appendChild(el('text', { class: 'val', x: W - m.right, y: y + 14, 'text-anchor': 'end', 'font-weight': selected ? 600 : 400 }, opts.value(v)));
-      const cy = y + 25;
-      if (opts.zero) {
+      const weight = selected ? 600 : 400;
+      // 第一行：名次與名稱；第二行：長條（或點）、數值、右側欄
+      g.appendChild(el('text', { class: 'name', x: m.left + 2, y: y + 14, 'font-weight': weight }, `${row.rank}. ${disp(name)}`));
+      const cy = y + 26;
+      if (o.zero) {
         // 長條：基線端方角，資料端 4px 圓角
         const x0 = sx(0), w = Math.max(sx(v) - x0, 2), bh = 10, rr = Math.min(4, w);
         g.appendChild(el('path', { class: `fill-${sectorClass(name)}`,
@@ -592,11 +678,16 @@
         g.appendChild(el('line', { class: 'gridline', x1: sx(ticks[0]), x2: sx(ticks[ticks.length - 1]), y1: cy, y2: cy }));
         g.appendChild(el('circle', { class: `fill-${sectorClass(name)} ${selected ? 'sel-ring' : 'ring'}`, cx: sx(v), cy: cy, r: selected ? 6.5 : 5 }));
       }
+      g.appendChild(el('text', { class: 'val', x: plotRight + o.valueWidth, y: cy + 4, 'text-anchor': 'end', 'font-weight': weight }, o.value(v)));
+      if (o.side) {
+        const s = o.side(name);
+        g.appendChild(el('text', { class: 'side' + (s.strong ? ' strong' : ''), x: W - m.right, y: cy + 4, 'text-anchor': 'end' }, s.text));
+      }
       svg.appendChild(g);
       const hit = el('rect', { class: 'hit', x: 0, y: y, width: W, height: rowH });
       hit.addEventListener('pointermove', (evt) => { if (!isTouch(evt)) showTip(evt, `${disp(name)}｜${state.year} 年`, industryRows(name)); });
-      hit.addEventListener('pointerleave', hideTip);
-      hit.addEventListener('click', () => select(name));
+      hit.addEventListener('pointerleave', (evt) => { if (!isTouch(evt)) hideTip(); });
+      hit.addEventListener('click', (evt) => select(name, evt));
       svg.appendChild(hit);
       y += rowH;
     });
@@ -605,65 +696,93 @@
   }
 
   // ---------- 圖 4、5：歷年變化 ----------
-  function renderTrend(boxId, key, opts) {
+  // 109→114 的變動幅度：薪資看百分比、工時看小時數，都取絕對值
+  function changeSize(metric, name) {
+    const s = series(metric, name), a = s[0], b = s[s.length - 1];
+    return metric === 'hours' ? Math.abs(b - a) : Math.abs(b / a - 1);
+  }
+  function wrapLabel(text, maxChars) {
+    const lines = Math.ceil(text.length / maxChars);
+    const per = Math.ceil(text.length / lines);
+    const out = [];
+    for (let i = 0; i < text.length; i += per) out.push(text.slice(i, i + per));
+    return out;
+  }
+
+  function renderTrend(boxId, metric, o) {
     const box = $(boxId);
     box.textContent = '';
     const names = scopeNames();
     const W = box.clientWidth;
-    const H = 260;
-    const m = { top: 26, right: 22, bottom: 44, left: 48 };
-    const [lo, hi] = extentAllYears(key, names);
+    const narrow = W < 420;
+    const H = 290;
+
+    // 突顯：變動幅度前 3 名 + 目前選取的；其餘淡灰細線
+    const movers = names.slice().sort((a, b) => changeSize(metric, b) - changeSize(metric, a)).slice(0, HIGHLIGHT_TOP);
+    const highlighted = movers.slice();
+    if (state.selected && names.includes(state.selected) && !highlighted.includes(state.selected)) highlighted.push(state.selected);
+
+    // 右邊留一欄放行業名稱，太長就折行
+    const maxChars = narrow ? 8 : 12;
+    const labels = highlighted.map((n) => ({ name: n, lines: wrapLabel(disp(n), maxChars) }));
+    const longest = Math.max.apply(null, labels.map((l) => Math.max.apply(null, l.lines.map((s) => s.length))));
+    const labelW = Math.ceil(longest * 12.6) + 4;
+    const m = { top: 26, right: labelW + 16, bottom: 44, left: 46 };
+    const plotRight = Math.max(m.left + 60, W - m.right);
+
+    const [lo, hi] = extentAllYears(metric, names);
     const pad = (hi - lo) * 0.05 || 1;
     const yt = niceTicks(lo - pad, hi + pad, 4);
     const sy = scale(yt[0], yt[yt.length - 1], H - m.bottom, m.top);
-    const sx = scale(0, D.years.length - 1, m.left + 8, W - m.right - 8);
+    const sx = scale(0, D.years.length - 1, m.left + 8, plotRight - 6);
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img',
-      'aria-label': `折線圖：${scopeText()} 109 到 114 年的${opts.label}` });
+      'aria-label': `折線圖：${scopeText()} 109 到 114 年的${o.label}` });
 
     yt.forEach((t) => {
-      svg.appendChild(el('line', { class: 'gridline', x1: m.left, x2: W - m.right, y1: sy(t), y2: sy(t) }));
-      svg.appendChild(el('text', { class: 'tick', x: m.left - 6, y: sy(t) + 4, 'text-anchor': 'end' }, opts.tick(t)));
+      svg.appendChild(el('line', { class: 'gridline', x1: m.left, x2: plotRight, y1: sy(t), y2: sy(t) }));
+      svg.appendChild(el('text', { class: 'tick', x: m.left - 6, y: sy(t) + 4, 'text-anchor': 'end' }, o.tick(t)));
     });
-    svg.appendChild(el('line', { class: 'axisline', x1: m.left, x2: W - m.right, y1: H - m.bottom, y2: H - m.bottom }));
-    D.years.forEach((yr, i) => {
-      svg.appendChild(el('text', { class: 'tick', x: sx(i), y: H - m.bottom + 16, 'text-anchor': 'middle',
-        'font-weight': yr === state.year ? 700 : 400 }, String(yr)));
-    });
-    svg.appendChild(el('text', { class: 'axis-title', x: 0, y: 12 }, opts.axisTitle));
-    svg.appendChild(el('text', { class: 'axis-title', x: (m.left + W - m.right) / 2, y: H - 6, 'text-anchor': 'middle' }, '年（民國）'));
+    svg.appendChild(el('line', { class: 'axisline', x1: m.left, x2: plotRight, y1: H - m.bottom, y2: H - m.bottom }));
     const yi = yearIndex(state.year);
+    const lastI = D.years.length - 1;
+    const crowded = sx(1) - sx(0) < 30;  // 太擠時只標頭、尾和目前選的年份
+    D.years.forEach((yr, i) => {
+      if (crowded) {
+        const isEnd = i === 0 || i === lastI;
+        if (i !== yi && !(isEnd && Math.abs(i - yi) !== 1)) return;
+      }
+      svg.appendChild(el('text', { class: 'tick', x: sx(i), y: H - m.bottom + 16, 'text-anchor': 'middle',
+        'font-weight': i === yi ? 700 : 400 }, String(yr)));
+    });
+    svg.appendChild(el('text', { class: 'axis-title', x: 0, y: 12 }, o.axisTitle));
+    svg.appendChild(el('text', { class: 'axis-title', x: (m.left + plotRight) / 2, y: H - 6, 'text-anchor': 'middle' }, '年（民國）'));
     svg.appendChild(el('line', { class: 'axisline', x1: sx(yi), x2: sx(yi), y1: m.top, y2: H - m.bottom, 'stroke-width': 2 }));
 
-    const path = (name) => D.values[key][name].map((v, i) => `${i ? 'L' : 'M'}${sx(i).toFixed(1)},${sy(v).toFixed(1)}`).join('');
-    names.filter((n) => n !== state.selected).forEach((n) => {
-      svg.appendChild(el('path', { d: path(n), fill: 'none', class: `stroke-${sectorClass(n)}`,
-        'stroke-width': 1.25, 'stroke-linejoin': 'round', opacity: state.selected ? 0.18 : 0.55 }));
+    const path = (name) => series(metric, name).map((v, i) => `${i ? 'L' : 'M'}${sx(i).toFixed(1)},${sy(v).toFixed(1)}`).join('');
+    names.filter((n) => !highlighted.includes(n)).forEach((n) => {
+      svg.appendChild(el('path', { d: path(n), fill: 'none', class: 'stroke-rest', 'stroke-width': 1, 'stroke-linejoin': 'round' }));
     });
-    if (state.selected && names.includes(state.selected)) {
-      const n = state.selected, series = D.values[key][n];
+    highlighted.filter((n) => n !== state.selected).concat(highlighted.filter((n) => n === state.selected)).forEach((n) => {
+      const selected = n === state.selected;
+      const s = series(metric, n);
       svg.appendChild(el('path', { d: path(n), fill: 'none', class: `stroke-${sectorClass(n)}`,
-        'stroke-width': 2.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
-      series.forEach((v, i) => svg.appendChild(el('circle', { class: `fill-${sectorClass(n)} ring`, cx: sx(i), cy: sy(v), r: 4.5 })));
-      // 只標頭尾兩個值
-      [[0, 'start'], [series.length - 1, 'end']].forEach(([i, anchor]) => {
-        const above = sy(series[i]) - 10 > m.top + 8;
-        svg.appendChild(el('text', { class: 'val halo', x: sx(i) + (anchor === 'start' ? -4 : 4), y: sy(series[i]) + (above ? -10 : 18),
-          'text-anchor': anchor }, opts.value(series[i])));
-      });
-    }
+        'stroke-width': selected ? 3 : 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round',
+        opacity: state.selected && !selected ? 0.55 : 1 }));
+      if (selected) s.forEach((v, i) => svg.appendChild(el('circle', { class: `fill-${sectorClass(n)} ring`, cx: sx(i), cy: sy(v), r: 4.5 })));
+      else svg.appendChild(el('circle', { class: `fill-${sectorClass(n)} ring`, cx: sx(lastI), cy: sy(s[lastI]), r: 4 }));
+    });
 
     const hover = el('circle', { class: 'hover-ring', r: 7, visibility: 'hidden' });
     svg.appendChild(hover);
-    const hit = el('rect', { class: 'hit', x: 0, y: 0, width: W, height: H });
+    const hit = el('rect', { class: 'hit', x: 0, y: 0, width: plotRight + 4, height: H });
     svg.appendChild(hit);
     const nearest = (evt) => {
       const rect = svg.getBoundingClientRect();
       const px = evt.clientX - rect.left, py = evt.clientY - rect.top;
-      let i = Math.round((px - sx(0)) / (sx(1) - sx(0)));
-      i = Math.max(0, Math.min(D.years.length - 1, i));
+      const i = clamp(Math.round((px - sx(0)) / (sx(1) - sx(0))), 0, lastI);
       let best = null, bestD = Infinity;
       names.forEach((n) => {
-        const d = Math.abs(sy(D.values[key][n][i]) - py);
+        const d = Math.abs(sy(series(metric, n)[i]) - py);
         if (d < bestD) { bestD = d; best = n; }
       });
       return { i, name: best };
@@ -672,31 +791,57 @@
       if (isTouch(evt)) return;
       const p = nearest(evt);
       const yr = D.years[p.i];
-      hover.setAttribute('cx', sx(p.i)); hover.setAttribute('cy', sy(D.values[key][p.name][p.i])); hover.setAttribute('visibility', 'visible');
+      hover.setAttribute('cx', sx(p.i)); hover.setAttribute('cy', sy(series(metric, p.name)[p.i])); hover.setAttribute('visibility', 'visible');
       showTip(evt, `${disp(p.name)}｜${yr} 年`, industryRows(p.name, yr));
     });
-    hit.addEventListener('pointerleave', () => { hover.setAttribute('visibility', 'hidden'); hideTip(); });
-    hit.addEventListener('click', (evt) => select(nearest(evt).name));
+    hit.addEventListener('pointerleave', (evt) => { if (isTouch(evt)) return; hover.setAttribute('visibility', 'hidden'); hideTip(); });
+    hit.addEventListener('click', (evt) => { const p = nearest(evt); select(p.name, evt, D.years[p.i]); });
+
+    // 右端標籤：先放在線尾的高度，重疊就往下推，超出底部再整串往上推
+    const lineH = 14, gap = 5, areaTop = 4, areaBottom = H - 22;
+    labels.forEach((l) => {
+      l.endY = sy(series(metric, l.name)[lastI]);
+      l.h = l.lines.length * lineH;
+      l.top = l.endY - l.h / 2;
+    });
+    labels.sort((a, b) => a.endY - b.endY);
+    labels.forEach((l, i) => { l.top = Math.max(l.top, i ? labels[i - 1].top + labels[i - 1].h + gap : areaTop); });
+    for (let i = labels.length - 1, limit = areaBottom; i >= 0; i--) {
+      labels[i].top = Math.min(labels[i].top, limit - labels[i].h);
+      limit = labels[i].top - gap;
+    }
+    const labelX = plotRight + 14;
+    labels.forEach((l) => {
+      const mid = l.top + l.h / 2;
+      svg.appendChild(el('line', { class: `stroke-${sectorClass(l.name)}`, 'stroke-width': 1,
+        x1: sx(lastI) + 5, y1: l.endY, x2: labelX - 3, y2: mid }));
+      const text = el('text', { class: 'name end-label', x: labelX, y: l.top + 11,
+        'font-weight': l.name === state.selected ? 700 : 400 });
+      l.lines.forEach((s, i) => text.appendChild(el('tspan', { x: labelX, dy: i ? lineH : 0 }, s)));
+      text.addEventListener('click', (evt) => select(l.name, evt));
+      svg.appendChild(text);
+    });
     box.appendChild(svg);
+    return movers;
   }
 
-  // ---------- 文字：選取列、重點數字、觀察 ----------
-  function sectorLegend(target, extra) {
+  // ---------- 文字：圖例、選取列、重點數字、觀察 ----------
+  function legend(target, sectors, extra) {
     target.textContent = '';
-    const sectors = Array.from(new Set(scopeNames().map((n) => byName[n].sector)));
     ['工業', '服務業'].filter((s) => sectors.includes(s)).forEach((s) => {
       const item = h('span');
       item.appendChild(h('span', `swatch ${s === '工業' ? 'industry' : 'service'}`));
       item.appendChild(document.createTextNode(`${s}底下的行業`));
       target.appendChild(item);
     });
-    (extra || []).forEach((text) => {
+    (extra || []).forEach((e) => {
       const item = h('span');
-      item.appendChild(h('span', 'line-key'));
-      item.appendChild(document.createTextNode(text));
+      if (e.key) item.appendChild(h('span', 'line-key' + (e.key === 'thin' ? ' thin' : '')));
+      item.appendChild(document.createTextNode(e.text));
       target.appendChild(item);
     });
   }
+  const sectorsOf = (names) => Array.from(new Set(names.map((n) => byName[n].sector)));
 
   function setInsight(id, sentences) {
     const p = $(id);
@@ -713,23 +858,41 @@
     return '呈中度以上的正相關：薪資越高的行業，工時傾向越長';
   }
   const fmtR = (r) => (r < 0 ? '−' : '') + Math.abs(r).toFixed(2);
+  const signed = (v, digits) => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(digits);
 
-  function renderText(fit, medHours) {
+  function renderText(fit, medHours, rs, movers) {
     const names = scopeNames();
     const n = names.length;
     const level = scopeLevel();
-    const bySalary = sortedBySalary(names);
-    const byHours = names.slice().sort((a, b) => val('hours', b) - val('hours', a));
+    const pay = payName();
+    const bySalary = rs.byPay;
+    const byHours = sortedBy('hours', names);
     const topS = bySalary[0], lowS = bySalary[n - 1], topH = byHours[0], lowH = byHours[n - 1];
     const hoursRank = (name) => byHours.indexOf(name) + 1;
     const adYear = state.year + 1911;
+    const modeText = useReal() ? '｜薪資：實質（110 年幣值）' : '｜薪資：名目';
 
     document.querySelectorAll('[data-scope]').forEach((p) => {
-      p.textContent = `${state.year} 年（西元 ${adYear} 年）｜比較對象：${scopeText()}`;
+      p.textContent = `${state.year} 年（西元 ${adYear} 年）｜比較對象：${scopeText()}${modeText}`;
     });
     document.querySelectorAll('[data-scope-trend]').forEach((p) => {
       p.textContent = `109–114 年｜比較對象：${scopeText()}`;
     });
+
+    $('title-scatter').textContent = `圖 1　${pay}與工時的關係`;
+    $('title-salary').textContent = `圖 2　各行業每人每月${pay}`;
+    $('title-trend-salary').textContent = `圖 4　109–114 年每人每月${pay}的變化`;
+    $('title-hourly').textContent = `圖 6　換算成${hourlyName()}後的排名（${pay} ÷ 總工時）`;
+    $('note-salary').textContent = useReal()
+      ? '註：依實質總薪資由高到低排序。實質總薪資是報表提供的數字，已扣除物價（以民國 110 年為基期），只有 17 個大類有資料。各行業的數字是平均值，不能相加。'
+      : '註：依總薪資由高到低排序。總薪資 = 經常性薪資 + 非經常性薪資（獎金、加班費等），是名目金額，未扣除物價。各行業的數字是平均值，不能相加。';
+    $('note-trend-salary').textContent =
+      `註：突顯規則：彩色粗線是 109→114 年${pay}漲跌百分比（取絕對值）最大的 3 個行業，加上目前選取的行業，右端直接標出名稱；其餘行業是淡灰細線。`
+      + (useReal() ? '實質薪資已扣除物價（110 年幣值）。' : '名目薪資未扣除物價，上升不等於購買力增加。')
+      + '縱軸不從 0 開始。直線標出目前選的年份。';
+    $('note-hourly').textContent =
+      `註：${hourlyName()} = 每人每月${pay} ÷ 每人每月總工時，是用兩個平均值相除的估算，不是官方統計，也不等於個別勞工實際的時薪。`
+      + `依${hourlyName()}由高到低排序；右欄是同一個行業的月薪名次，▲ 表示換算成時薪後名次前進、▼ 表示後退、＝ 表示不變，◆ 標出名次變動最大的行業。`;
 
     // 選取列
     const sel = $('selection');
@@ -740,8 +903,9 @@
       name.appendChild(h('span', `swatch ${sectorClass(s)}`));
       name.appendChild(document.createTextNode(disp(s)));
       sel.appendChild(name);
-      sel.appendChild(h('span', '', `總薪資 ${fmtInt(val('salary', s))} 元（${n} 個中第 ${bySalary.indexOf(s) + 1} 高）`));
+      sel.appendChild(h('span', '', `${pay} ${fmtInt(val('pay', s))} 元（${n} 個中第 ${rs.shift[s].pay} 高）`));
       sel.appendChild(h('span', '', `總工時 ${fmtHours(val('hours', s))} 小時（第 ${hoursRank(s)} 長）`));
+      sel.appendChild(h('span', '', `${hourlyName()} ${fmtInt(val('hourly', s))} 元/小時（第 ${rs.shift[s].hourly} 高）`));
       const btn = h('button', '', '清除選取');
       btn.type = 'button';
       btn.addEventListener('click', () => select(s));
@@ -762,26 +926,26 @@
     };
     tile('薪資與工時的相關係數 r', fit ? fmtR(fit.r) : '—',
       fit ? `${n} 個${level}，未加權` : '少於 3 個行業，不計算');
-    tile('比較對象', `${n} 個${level}`, `${state.year} 年｜同一層級互比`);
-    tile('總薪資最高', disp(topS), `${fmtInt(val('salary', topS))} 元｜工時 ${fmtHours(val('hours', topS))} 小時`, true);
-    tile('總工時最長', disp(topH), `${fmtHours(val('hours', topH))} 小時｜薪資 ${fmtInt(val('salary', topH))} 元`, true);
+    tile(`${pay}最高`, disp(topS), `${fmtInt(val('pay', topS))} 元｜工時 ${fmtHours(val('hours', topS))} 小時`, true);
+    tile('總工時最長', disp(topH), `${fmtHours(val('hours', topH))} 小時｜薪資 ${fmtInt(val('pay', topH))} 元`, true);
+    tile(`${hourlyName()}最高（估算）`, disp(rs.byHourly[0]), `${fmtInt(val('hourly', rs.byHourly[0]))} 元/小時｜月薪第 ${rs.shift[rs.byHourly[0]].pay} 名`, true);
 
     // 圖 1
     const s1 = [];
     if (fit) {
-      s1.push(`${state.year} 年${scopeText()}中，總薪資與總工時的相關係數 r = ${fmtR(fit.r)}，${describeR(fit.r)}。`);
+      s1.push(`${state.year} 年${scopeText()}中，${pay}與總工時的相關係數 r = ${fmtR(fit.r)}，${describeR(fit.r)}。`);
     } else {
       s1.push(`這個大類底下只有 ${n} 個中類，點數太少，不計算相關係數。`);
     }
     s1.push(`薪資最高的${disp(topS)}每月工時 ${fmtHours(val('hours', topS))} 小時，在 ${n} 個行業中排第 ${hoursRank(topS)} 長；`
-      + `工時最長的${disp(topH)}（${fmtHours(val('hours', topH))} 小時）薪資排第 ${bySalary.indexOf(topH) + 1}。`);
+      + `工時最長的${disp(topH)}（${fmtHours(val('hours', topH))} 小時）薪資排第 ${rs.shift[topH].pay}。`);
     setInsight('insight-scatter', s1);
 
     // 圖 2
-    const ratio = val('salary', topS) / val('salary', lowS);
+    const ratio = val('pay', topS) / val('pay', lowS);
     setInsight('insight-salary', [
-      `薪資最高的${disp(topS)}（${fmtInt(val('salary', topS))} 元）是最低的${disp(lowS)}（${fmtInt(val('salary', lowS))} 元）的 ${ratio.toFixed(1)} 倍。`,
-      `${disp(topS)}的總薪資中，獎金、加班費等非經常性薪資占 ${(val('irregular', topS) / val('salary', topS) * 100).toFixed(0)}%。`,
+      `薪資最高的${disp(topS)}（${fmtInt(val('pay', topS))} 元）是最低的${disp(lowS)}（${fmtInt(val('pay', lowS))} 元）的 ${ratio.toFixed(1)} 倍。`,
+      `${disp(topS)}的名目總薪資中，獎金、加班費等非經常性薪資占 ${(val('irregular', topS) / val('salary', topS) * 100).toFixed(0)}%。`,
     ]);
 
     // 圖 3
@@ -796,61 +960,131 @@
     // 圖 4、5
     const first = D.years[0], last = D.years[D.years.length - 1];
     const s = state.selected;
+    const pct = (x) => (val('pay', x, last) / val('pay', x, first) - 1) * 100;
+    const dh = (x) => val('hours', x, last) - val('hours', x, first);
+    const s4 = [`${first}→${last} 年${pay}變動幅度最大的是` + movers.pay.map((x) => `${disp(x)}（${signed(pct(x), 1)}%）`).join('、') + '。'];
+    const s5 = [`${first}→${last} 年總工時變動最大的是` + movers.hours.map((x) => `${disp(x)}（${signed(dh(x), 1)} 小時）`).join('、') + '。'];
     if (s) {
-      const a = val('salary', s, first), b = val('salary', s, last);
-      setInsight('insight-trend-salary', [`${disp(s)}的總薪資從 ${first} 年的 ${fmtInt(a)} 元變成 ${last} 年的 ${fmtInt(b)} 元（${b >= a ? '+' : '−'}${Math.abs((b / a - 1) * 100).toFixed(1)}%，名目）。`]);
-      const c = val('hours', s, first), d = val('hours', s, last);
-      setInsight('insight-trend-hours', [`${disp(s)}的總工時從 ${first} 年的 ${fmtHours(c)} 小時變成 ${last} 年的 ${fmtHours(d)} 小時（${d >= c ? '+' : '−'}${Math.abs(d - c).toFixed(1)} 小時）。`]);
+      s4.push(`目前選取的${disp(s)}從 ${fmtInt(val('pay', s, first))} 元變成 ${fmtInt(val('pay', s, last))} 元（${signed(pct(s), 1)}%）。`);
+      s5.push(`目前選取的${disp(s)}從 ${fmtHours(val('hours', s, first))} 小時變成 ${fmtHours(val('hours', s, last))} 小時（${signed(dh(s), 1)} 小時）。`);
     } else {
-      const up = names.filter((x) => val('salary', x, last) > val('salary', x, first)).length;
-      const growth = names.map((x) => ({ x, g: val('salary', x, last) / val('salary', x, first) - 1 })).sort((p, q) => q.g - p.g);
-      setInsight('insight-trend-salary', [
-        `${first}→${last} 年，${n} 個行業中有 ${up} 個的名目總薪資上升。`,
-        `漲幅最大的是${disp(growth[0].x)}（+${(growth[0].g * 100).toFixed(1)}%）。`,
-      ]);
-      const down = names.filter((x) => val('hours', x, last) < val('hours', x, first)).length;
-      const dh = names.map((x) => ({ x, d: val('hours', x, last) - val('hours', x, first) })).sort((p, q) => p.d - q.d);
-      setInsight('insight-trend-hours', [
-        `${first}→${last} 年，${n} 個行業中有 ${down} 個的總工時減少、${n - down} 個持平或增加。`,
-        `減少最多的是${disp(dh[0].x)}（${dh[0].d.toFixed(1)} 小時）。`,
-      ]);
+      const up = names.filter((x) => pct(x) > 0).length;
+      s4.push(`${n} 個行業中有 ${up} 個的${useReal() ? '實質' : '名目'}總薪資上升。`);
+      const down = names.filter((x) => dh(x) < 0).length;
+      s5.push(`${n} 個行業中有 ${down} 個的總工時減少、${n - down} 個持平或增加。`);
     }
+    setInsight('insight-trend-salary', s4);
+    setInsight('insight-trend-hours', s5);
+
+    // 圖 6：高薪是不是靠長工時換來的？
+    const s6 = [];
+    if (n >= 4) {
+      const k = Math.min(5, Math.floor(n / 2));
+      const stay = bySalary.slice(0, k).filter((x) => rs.shift[x].hourly <= k).length;
+      const answer = stay / k >= 0.8 ? '大致不是' : stay / k >= 0.5 ? '只有一部分是' : '有相當程度是';
+      s6.push(`高薪是不是靠長工時換來的？${answer}。月薪前 ${k} 名的行業換算成時薪後，有 ${stay} 個仍在時薪前 ${k} 名；`
+        + `月薪最高的${disp(topS)}時薪排第 ${rs.shift[topS].hourly}（${fmtInt(val('hourly', topS))} 元/小時），每月工時 ${fmtHours(val('hours', topS))} 小時，在 ${n} 個行業中排第 ${hoursRank(topS)} 長。`);
+    } else {
+      s6.push(`這一組只有 ${n} 個行業，名次比較的意義有限；時薪最高的是${disp(rs.byHourly[0])}（${fmtInt(val('hourly', rs.byHourly[0]))} 元/小時）。`);
+    }
+    if (rs.movers.length) {
+      const shown = rs.movers.slice(0, 3).map((x) => {
+        const d = rs.shift[x];
+        return `${disp(x)}（月薪第 ${d.pay} → 時薪第 ${d.hourly}，${d.delta > 0 ? '前進' : '後退'} ${Math.abs(d.delta)} 名，工時 ${fmtHours(val('hours', x))} 小時）`;
+      });
+      s6.push(`名次變動最大的是${shown.join('、')}${rs.movers.length > 3 ? ` 等 ${rs.movers.length} 個行業` : ''}：工時長的行業換算後名次後退，工時短的前進。`);
+    } else {
+      s6.push('換算成時薪後，所有行業的名次都沒有變。');
+    }
+    setInsight('insight-hourly', s6);
   }
 
   function renderTable() {
-    const body = $('table').tBodies[0];
+    const table = $('table');
+    const real = realAvailable();
+    const head = table.tHead;
+    head.textContent = '';
+    const cols = [['行業'], ['部門'], ['總薪資', '元（名目）']];
+    if (real) cols.push(['實質總薪資', '元（110 年幣值）']);
+    cols.push(['經常性薪資', '元'], ['非經常性薪資', '元'], ['加班費', '元'], ['總工時', '小時'], ['正常工時', '小時'], ['加班工時', '小時'],
+      [hourlyName() + '（估算）', '元/小時'], ['受僱員工人數', '人']);
+    const tr = document.createElement('tr');
+    cols.forEach(([label, unit]) => {
+      const th = h('th', '', label);
+      if (unit) th.appendChild(h('small', '', unit));
+      tr.appendChild(th);
+    });
+    head.appendChild(tr);
+
+    const body = table.tBodies[0];
     body.textContent = '';
-    sortedBySalary(scopeNames()).forEach((name) => {
-      const tr = document.createElement('tr');
-      tr.tabIndex = 0;
-      if (name === state.selected) tr.className = 'selected';
-      const cells = [
-        disp(name), byName[name].sector,
-        fmtInt(val('salary', name)), fmtInt(val('regular', name)), fmtInt(val('irregular', name)), fmtInt(val('overtime_pay', name)),
+    sortedBy('pay', scopeNames()).forEach((name) => {
+      const row = document.createElement('tr');
+      row.tabIndex = 0;
+      if (name === state.selected) row.className = 'selected';
+      const cells = [disp(name), byName[name].sector, fmtInt(val('salary', name))];
+      if (real) cells.push(fmtInt(val('real_salary', name)));
+      cells.push(fmtInt(val('regular', name)), fmtInt(val('irregular', name)), fmtInt(val('overtime_pay', name)),
         fmtHours(val('hours', name)), fmtHours(val('normal_hours', name)), fmtHours(val('overtime_hours', name)),
-        fmtInt(val('employees', name)),
-      ];
-      cells.forEach((c) => tr.appendChild(h('td', '', c)));
-      tr.addEventListener('click', () => select(name));
-      tr.addEventListener('keydown', (evt) => { if (evt.key === 'Enter' || evt.key === ' ') { evt.preventDefault(); select(name); } });
-      body.appendChild(tr);
+        fmtInt(val('hourly', name)), fmtInt(val('employees', name)));
+      cells.forEach((c) => row.appendChild(h('td', '', c)));
+      row.addEventListener('click', () => select(name));
+      row.addEventListener('keydown', (evt) => { if (evt.key === 'Enter' || evt.key === ' ') { evt.preventDefault(); select(name); } });
+      body.appendChild(row);
     });
   }
 
-  function render() {
+  function renderControls() {
     document.querySelectorAll('#years button').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.year === state.year)));
-    sectorLegend($('legend-scatter'), scopeNames().length >= 3 ? ['趨勢線（最小平方直線）'] : []);
-    sectorLegend($('legend-hours'), scopeNames().length >= 3 ? ['這一組的工時中位數'] : []);
-    document.querySelectorAll('[data-sector-legend]').forEach((node) => sectorLegend(node));
+    const ok = realAvailable();
+    document.querySelectorAll('#pay-mode button').forEach((b) => {
+      const isReal = b.dataset.real === '1';
+      b.disabled = !ok;
+      b.setAttribute('aria-pressed', String(isReal === useReal()));
+    });
+    $('pay-hint').textContent = ok ? '' : '中類無實質薪資資料';
+  }
+
+  let renderedWidth = 0;
+  function render() {
+    renderControls();
+    const width = $('chart-scatter').clientWidth;
+    if (width < MIN_WIDTH) return;  // 還沒有版面寬度（例如分頁在背景）：等 ResizeObserver 再畫
+    renderedWidth = width;
+    const boxes = Array.from(document.querySelectorAll('.chart'));
+    boxes.forEach((b) => { b.style.minHeight = b.offsetHeight + 'px'; });
+    const names = scopeNames();
+    const sectors = sectorsOf(names);
+    const rs = rankShift(names);
+
+    legend($('legend-scatter'), sectors, names.length >= 3 ? [{ key: 'line', text: '趨勢線（最小平方直線）' }] : []);
+    legend($('legend-hours'), sectors, names.length >= 3 ? [{ key: 'line', text: '這一組的工時中位數' }] : []);
+    legend($('legend-hourly'), sectors, [{ text: '右欄：月薪名次與換算後的名次變動（▲ 前進　▼ 後退　＝ 不變　◆ 變動最大）' }]);
+    document.querySelectorAll('[data-sector-legend]').forEach((node) => legend(node, sectors));
+    document.querySelectorAll('[data-trend-legend]').forEach((node) =>
+      legend(node, sectors, names.length > HIGHLIGHT_TOP ? [{ key: 'thin', text: '其餘行業' }] : []));
+
     const fit = renderScatter();
-    renderRank('chart-salary', 'salary', { zero: true, label: '每人每月總薪資長條圖',
-      axisTitle: '每人每月總薪資（新臺幣元）', tick: (t) => (t === 0 ? '0' : fmtWan(t)), value: (v) => fmtInt(v) + ' 元' });
-    const med = renderRank('chart-hours', 'hours', { zero: false, median: true, label: '每人每月總工時點圖',
-      axisTitle: '每人每月總工時（小時）', tick: (t) => String(t), value: (v) => fmtHours(v) + ' 小時' });
-    renderTrend('chart-trend-salary', 'salary', { label: '每人每月總薪資', axisTitle: '每人每月總薪資（新臺幣元）', tick: fmtWan, value: fmtInt });
-    renderTrend('chart-trend-hours', 'hours', { label: '每人每月總工時', axisTitle: '每人每月總工時（小時）', tick: (t) => String(t), value: fmtHours });
-    renderText(fit, med);
+    renderRank('chart-salary', { metric: 'pay', order: rs.byPay, zero: true, label: `每人每月${payName()}長條圖，由高到低`,
+      axisTitle: payAxis(), tick: (t) => (t === 0 ? '0' : fmtWan(t)), value: (v) => fmtInt(v) + ' 元', valueWidth: 78 });
+    const med = renderRank('chart-hours', { metric: 'hours', order: rs.byPay, zero: false, median: true, label: '每人每月總工時點圖，依總薪資由高到低排列',
+      axisTitle: '每人每月總工時（小時）', tick: (t) => String(t), value: (v) => fmtHours(v) + ' 小時', valueWidth: 78 });
+    const movers = {
+      pay: renderTrend('chart-trend-salary', 'pay', { label: `每人每月${payName()}`, axisTitle: payAxis(), tick: fmtWan }),
+      hours: renderTrend('chart-trend-hours', 'hours', { label: '每人每月總工時', axisTitle: '每人每月總工時（小時）', tick: (t) => String(t) }),
+    };
+    renderRank('chart-hourly', { metric: 'hourly', order: rs.byHourly, zero: true, label: `${hourlyName()}長條圖，由高到低，並對照月薪名次`,
+      axisTitle: `${hourlyName()}（元/小時，估算）`, tick: (t) => fmtInt(t), value: (v) => fmtInt(v) + ' 元', valueWidth: 66,
+      keep: rs.movers, sideWidth: 112,
+      side: (name) => {
+        const d = rs.shift[name];
+        const move = d.delta > 0 ? `▲${d.delta}` : d.delta < 0 ? `▼${-d.delta}` : '＝';
+        const strong = rs.movers.includes(name);
+        return { text: `${strong ? '◆ ' : ''}月薪第 ${d.pay}　${move}`, strong };
+      } });
+    renderText(fit, med, rs, movers);
     renderTable();
+    boxes.forEach((b) => { b.style.minHeight = ''; });
   }
 
   // ---------- 啟動 ----------
@@ -865,8 +1099,12 @@
       b.type = 'button';
       b.dataset.year = yr;
       b.title = `西元 ${yr + 1911} 年`;
-      b.addEventListener('click', () => { state.year = yr; render(); });
+      b.addEventListener('click', () => { state.year = yr; hideTip(); render(); });
       years.appendChild(b);
+    });
+
+    document.querySelectorAll('#pay-mode button').forEach((b) => {
+      b.addEventListener('click', () => { state.real = b.dataset.real === '1'; hideTip(); render(); });
     });
 
     const scope = $('scope');
@@ -885,19 +1123,22 @@
     scope.addEventListener('change', () => {
       state.scope = scope.value;
       if (!scopeNames().includes(state.selected)) state.selected = null;
+      hideTip();
       render();
     });
 
     $('app').hidden = false;
     render();
-    let lastWidth = window.innerWidth, timer = null;
-    window.addEventListener('resize', () => {
-      if (window.innerWidth === lastWidth) return;  // 手機捲動時網址列收合只改高度，不必重畫
-      lastWidth = window.innerWidth;
+    // 寬度改變才重畫（手機捲動時網址列收合只改高度）；也補畫一開始沒有寬度的情況
+    let timer = null;
+    new ResizeObserver(() => {
+      if (Math.abs($('chart-scatter').clientWidth - renderedWidth) < 1) return;
       clearTimeout(timer);
-      timer = setTimeout(render, 120);
-    });
-    window.addEventListener('scroll', hideTip, { passive: true });
+      timer = setTimeout(() => { hideTip(); render(); }, 100);
+    }).observe($('chart-scatter'));
+    // 重畫時版面高度會瞬間變動而觸發 scroll，剛顯示的 tooltip 不要被它關掉
+    window.addEventListener('scroll', () => { if (performance.now() - tipShownAt > 400) hideTip(); }, { passive: true });
+    document.addEventListener('pointerdown', hideTip);
   }
 
   fetch('data.json')
