@@ -8,27 +8,34 @@
 <style>
   :root {
     color-scheme: light;
-    --page: #eef0f3;
+    --page: #eff6ff;
     --surface: #ffffff;
-    --tint: #f3f5f9;
-    --ink: #111827;
-    --ink-2: #4b5563;
-    --muted: #8a909a;
-    --grid: #e6e8ec;
-    --axis: #c5c9d0;
-    --border: rgba(17, 24, 39, 0.08);
-    --wash: rgba(17, 24, 39, 0.05);
-    --topbar: #1b2430;
-    --topbar-ink: #ffffff;
-    --topbar-ink-2: #b6c0cc;
-    /* 全站只用這一組：工業、服務業、選取的行業；其餘都是灰色 */
-    --industry: #2a78d6;
-    --service: #eb6834;
-    --accent: #c2187a;
+    --tint: #eff6ff;
+    --tint-2: #dbeafe;
+    /* 文字一律用深色：白底上的小字（註腳、刻度）也有 7:1 以上的對比 */
+    --ink: #0f172a;
+    --ink-2: #334155;
+    --muted: #475569;
+    --grid: #dbeafe;
+    --axis: #93c5fd;
+    --border: rgba(30, 58, 138, 0.12);
+    --wash: rgba(37, 99, 235, 0.09);
+    --deep: #1e3a8a;
+    --primary: #2563eb;
+    /* 資料顏色：同一個行業類別在所有圖裡都是同一個顏色 */
+    --industry: #2563eb;  /* 工業 */
+    --service: #f97316;   /* 服務業 */
+    --accent: #c2187a;    /* 目前選取的行業 */
+    --rest: #93c5fd;      /* 圖 4、5 的其餘行業 */
+    /* KPI 卡片：色帶用鮮明色，大數字用同色系較深的一階，確保白底上看得清楚 */
+    --kpi-1: #2563eb; --kpi-1-ink: #1d4ed8;
+    --kpi-2: #0d9488; --kpi-2-ink: #0f766e;
+    --kpi-3: #f97316; --kpi-3-ink: #c2410c;
+    --kpi-4: #7c3aed; --kpi-4-ink: #6d28d9;
     --radius: 12px;
     --gap: 16px;
-    --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.07);
-    --shadow-hover: 0 2px 4px rgba(16, 24, 40, 0.06), 0 8px 20px rgba(16, 24, 40, 0.10);
+    --shadow: 0 1px 2px rgba(30, 58, 138, 0.06), 0 1px 3px rgba(30, 58, 138, 0.08);
+    --shadow-hover: 0 2px 4px rgba(30, 58, 138, 0.08), 0 8px 20px rgba(30, 58, 138, 0.14);
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
@@ -42,16 +49,16 @@
   h1, h2, h3, p { margin: 0; }
 
   /* ---- 深色標題列 ---- */
-  .topbar { background: var(--topbar); color: var(--topbar-ink); }
+  .topbar { background: linear-gradient(120deg, #1e3a8a 0%, #2563eb 100%); color: #fff; }
   .topbar .wrap { display: flex; flex-wrap: wrap; gap: 12px 32px; align-items: center; justify-content: space-between; padding-top: 18px; padding-bottom: 18px; }
   .topbar h1 { font-size: 24px; line-height: 1.3; font-weight: 700; }
-  .topbar .lede { color: var(--topbar-ink-2); font-size: 14px; margin-top: 2px; }
+  .topbar .lede { color: #fff; font-size: 14px; margin-top: 2px; }
   .topbar .meta { display: grid; grid-template-columns: max-content max-content; gap: 1px 10px; margin: 0; font-size: 12.5px; line-height: 1.6; }
-  .topbar .meta dt { color: var(--topbar-ink-2); }
-  .topbar .meta dd { margin: 0; color: var(--topbar-ink); }
+  .topbar .meta dt { color: #fff; }
+  .topbar .meta dd { margin: 0; color: #fff; font-weight: 700; }
 
   /* ---- 固定在頂端的篩選列 ---- */
-  .filters { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: 0 2px 8px rgba(16, 24, 40, 0.06); }
+  .filters { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--tint-2); box-shadow: 0 2px 8px rgba(30, 58, 138, 0.10); }
   .filters .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: flex-start; padding-top: 10px; padding-bottom: 10px; }
   .field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .field > .field-label { font-size: 12px; color: var(--ink-2); }
@@ -67,16 +74,16 @@
   .seg button:first-child { border-left-width: 1px; border-radius: 8px 0 0 8px; }
   .seg button:last-child { border-radius: 0 8px 8px 0; }
   .seg button:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--tint); }
-  .seg button[aria-pressed="true"] { background: var(--topbar); color: #fff; border-color: var(--topbar); font-weight: 600; }
-  .seg button:disabled { cursor: not-allowed; color: var(--muted); background: var(--tint); border-color: var(--grid); font-weight: 400; }
-  .seg button:disabled[aria-pressed="true"] { background: var(--grid); color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 700; }
+  .seg button:disabled { cursor: not-allowed; color: var(--muted); background: #e2e8f0; border-color: var(--axis); font-weight: 400; }
+  .seg button:disabled[aria-pressed="true"] { background: #bfdbfe; color: var(--deep); font-weight: 700; }
   select {
     font: inherit; font-size: 14px; height: 34px; max-width: 100%; padding: 0 8px;
     color: var(--ink); background: var(--surface); border: 1px solid var(--axis); border-radius: 8px;
     transition: border-color .15s;
   }
-  select:hover { border-color: var(--ink-2); }
-  button:focus-visible, select:focus-visible, tr:focus-visible, summary:focus-visible { outline: 2px solid var(--industry); outline-offset: 2px; }
+  select:hover { border-color: var(--primary); }
+  button:focus-visible, select:focus-visible, tr:focus-visible, summary:focus-visible { outline: 3px solid var(--deep); outline-offset: 2px; }
 
   main.wrap { padding-top: var(--gap); padding-bottom: 48px; display: flex; flex-direction: column; gap: var(--gap); }
 
@@ -110,20 +117,24 @@
 
   /* ---- KPI ---- */
   .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); }
-  .kpi { padding: 14px 18px; }
-  .kpi .label { font-size: 12.5px; color: var(--ink-2); }
-  .kpi .value { font-size: 32px; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; white-space: nowrap; }
+  .kpi { padding: 14px 18px; border-top: 6px solid var(--kpi); }
+  .kpi:nth-child(1) { --kpi: var(--kpi-1); --kpi-ink: var(--kpi-1-ink); }
+  .kpi:nth-child(2) { --kpi: var(--kpi-2); --kpi-ink: var(--kpi-2-ink); }
+  .kpi:nth-child(3) { --kpi: var(--kpi-3); --kpi-ink: var(--kpi-3-ink); }
+  .kpi:nth-child(4) { --kpi: var(--kpi-4); --kpi-ink: var(--kpi-4-ink); }
+  .kpi .label { font-size: 12.5px; color: var(--ink-2); font-weight: 600; }
+  .kpi .value { font-size: 32px; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; white-space: nowrap; color: var(--kpi-ink); }
   .kpi .value small { font-size: 14px; font-weight: 500; color: var(--ink-2); margin-left: 4px; letter-spacing: 0; }
   .kpi .sub { font-size: 12.5px; color: var(--ink-2); overflow-wrap: anywhere; }
   .kpi .delta { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--grid); }
   .kpi .delta b { color: var(--ink); font-weight: 700; margin-right: 6px; white-space: nowrap; }
 
   /* ---- 圖表卡片：標題 > 範圍 > 圖 > 註腳 > 觀察 ---- */
-  .card h2 { font-size: 16.5px; line-height: 1.4; font-weight: 650; }
+  .card h2 { font-size: 16.5px; line-height: 1.4; font-weight: 650; border-left: 5px solid var(--primary); padding-left: 10px; }
   .card .scope { font-size: 12.5px; color: var(--ink-2); margin: 2px 0 10px; }
   .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
-  .legend .line-key { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--muted); margin-right: 6px; vertical-align: middle; }
-  .legend .line-key.thin { border-top: 1px solid var(--axis); }
+  .legend .line-key { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--deep); margin-right: 6px; vertical-align: middle; }
+  .legend .line-key.thin { border-top: 2px solid var(--rest); }
   .chart { width: 100%; }
   .chart svg { display: block; width: 100%; touch-action: pan-y; }
   .chart svg.fade-in { animation: fade-in .35s ease-out; }
@@ -132,13 +143,13 @@
   .insight {
     display: flex; gap: 10px; align-items: flex-start;
     margin-top: 12px; padding: 10px 12px; font-size: 13.5px; line-height: 1.65;
-    background: var(--tint); border-radius: 8px; color: var(--ink);
+    background: var(--tint); border-left: 5px solid var(--deep); border-radius: 4px 8px 8px 4px; color: var(--ink);
   }
   .card .insight { margin-top: auto; }
   .card .note + .insight { margin-top: auto; }
   .card .note { margin-bottom: 12px; }
-  .insight svg { flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--ink-2); }
-  .insight b { font-weight: 700; }
+  .insight svg { flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--deep); }
+  .insight b { font-weight: 700; color: var(--deep); }
 
   svg text { font-family: inherit; fill: var(--ink-2); font-size: 12px; }
   svg .tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
@@ -155,16 +166,17 @@
   svg .stroke-industry { stroke: var(--industry); }
   svg .stroke-service { stroke: var(--service); }
   svg .stroke-accent { stroke: var(--accent); }
-  svg .stroke-rest { stroke: var(--axis); }
+  svg .stroke-rest { stroke: var(--rest); }
   svg .ring { stroke: var(--surface); stroke-width: 2; }
   svg .sel-ring { stroke: var(--ink); stroke-width: 2; }
-  svg .dim { opacity: 0.35; }
+  svg .dim { opacity: 0.3; }
   svg .hit { fill: transparent; cursor: pointer; }
   svg .hit.row { transition: fill .12s; }
   svg .hit.row:hover { fill: var(--wash); }
   svg .rowbg { fill: var(--wash); }
   svg .bar { transform-box: fill-box; transform-origin: 0 50%; }
-  svg .trendline { stroke: var(--muted); stroke-width: 2; }
+  svg .trendline { stroke: var(--deep); stroke-width: 2; }
+  svg .median { stroke: var(--deep); stroke-width: 2; }
   svg .hover-ring { fill: none; stroke: var(--ink); stroke-width: 1.5; pointer-events: none; }
   svg .halo { stroke: var(--surface); stroke-width: 3; paint-order: stroke; stroke-linejoin: round; }
   svg .end-label { cursor: pointer; }
@@ -183,23 +195,27 @@
   /* ---- 可收合的資料表 ---- */
   details > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; border-radius: 6px; }
   details > summary::-webkit-details-marker { display: none; }
-  details > summary::after { content: "展開 ▾"; font-size: 12.5px; color: var(--ink-2); border: 1px solid var(--axis); border-radius: 8px; padding: 2px 10px; white-space: nowrap; transition: background-color .15s; }
+  details > summary::after { content: "展開 ▾"; font-size: 12.5px; color: var(--deep); font-weight: 600; border: 1px solid var(--axis); border-radius: 8px; padding: 2px 10px; white-space: nowrap; transition: background-color .15s; }
   details[open] > summary::after { content: "收合 ▴"; }
   details > summary:hover::after { background: var(--tint); }
   .table-wrap { overflow-x: auto; margin-top: 8px; }
   table { border-collapse: collapse; width: 100%; font-size: 13px; }
   th, td { padding: 6px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
-  th { color: var(--ink-2); font-weight: 600; vertical-align: bottom; font-size: 12.5px; }
-  th small { display: block; font-weight: 400; color: var(--muted); }
+  th { color: #fff; background: var(--primary); font-weight: 700; vertical-align: bottom; font-size: 12.5px; border-bottom-color: var(--primary); }
+  th small { display: block; font-weight: 400; color: #fff; }
+  th:first-child { border-radius: 8px 0 0 0; }
+  th:last-child { border-radius: 0 8px 0 0; }
   th:first-child, td:first-child { text-align: left; white-space: normal; min-width: 150px; }
   th:nth-child(2), td:nth-child(2) { text-align: left; }
   tbody tr { cursor: pointer; transition: background-color .12s; }
-  tbody tr:hover { background: var(--tint); }
-  tbody tr.selected { background: var(--tint); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
+  tbody tr:nth-child(even) { background: var(--tint); }
+  tbody tr:hover { background: var(--tint-2); }
+  tbody tr.selected { background: #fce7f3; font-weight: 700; box-shadow: inset 4px 0 0 var(--accent); }
 
   .about { font-size: 14px; }
   .about h3 { font-size: 14px; margin: 18px 0 6px; }
   .about ul, .about ol { margin: 4px 0 0; padding-left: 22px; color: var(--ink-2); }
+  .about h3 { color: var(--deep); }
   .about li { margin-bottom: 4px; }
   .about dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 10px 0 0; }
   .about dt { color: var(--ink-2); }
@@ -320,7 +336,7 @@
         <p class="scope" data-scope-trend></p>
         <div class="legend" data-trend-legend></div>
         <div class="chart" id="chart-trend-hours"></div>
-        <p class="note">註：突顯規則：彩色粗線是 109→114 年總工時增減小時數（取絕對值）最大的 3 個行業，加上目前選取的行業，右端直接標出名稱；其餘行業是淡灰細線。年資料是全年各月的平均，工作日數每年不同，1–2 小時內的變動不宜過度解讀。縱軸不從 0 開始。直線標出目前選的年份。</p>
+        <p class="note">註：突顯規則：彩色粗線是 109→114 年總工時增減小時數（取絕對值）最大的 3 個行業，加上目前選取的行業，右端直接標出名稱；其餘行業是淺藍細線。年資料是全年各月的平均，工作日數每年不同，1–2 小時內的變動不宜過度解讀。縱軸不從 0 開始。直線標出目前選的年份。</p>
         <p class="insight" id="insight-trend-hours"></p>
       </article>
 
@@ -735,7 +751,7 @@
     let med = null;
     if (o.median && names.length >= 3) {
       med = median(names.map((n) => val(o.metric, n)));
-      svg.appendChild(el('line', { class: 'axisline', x1: sx(med), x2: sx(med), y1: m.top, y2: m.top + plotH, 'stroke-width': 2 }));
+      svg.appendChild(el('line', { class: 'median', x1: sx(med), x2: sx(med), y1: m.top, y2: m.top + plotH }));
     }
 
     let y = m.top;
@@ -748,7 +764,8 @@
       }
       const name = row.name, v = val(o.metric, name);
       const selected = name === state.selected;
-      const g = el('g', state.selected && !selected ? { class: 'dim' } : {});
+      const g = el('g', {});
+      const dim = state.selected && !selected ? ' dim' : '';
       if (selected) svg.appendChild(el('rect', { class: 'rowbg', x: 0, y: y, width: W, height: rowH, rx: 4 }));
       const weight = selected ? 600 : 400;
       // 第一行：名次與名稱；第二行：長條（或點）、數值、右側欄
@@ -757,13 +774,13 @@
       if (o.zero) {
         // 長條：基線端方角，資料端 4px 圓角
         const x0 = sx(0), w = Math.max(sx(v) - x0, 2), bh = 10, rr = Math.min(4, w);
-        const bar = el('path', { class: `bar fill-${selected ? 'accent' : sectorClass(name)}`,
+        const bar = el('path', { class: `bar fill-${selected ? 'accent' : sectorClass(name)}${dim}`,
           d: `M${x0},${cy - bh / 2}h${w - rr}a${rr},${rr} 0 0 1 ${rr},${rr}v${bh - 2 * rr}a${rr},${rr} 0 0 1 ${-rr},${rr}h${-(w - rr)}z` });
         g.appendChild(bar);
         tween(bar, `${boxId}|bar|${name}`, { x: 0, y: 0, w: w });
       } else {
         g.appendChild(el('line', { class: 'gridline', x1: sx(ticks[0]), x2: sx(ticks[ticks.length - 1]), y1: cy, y2: cy }));
-        const dot = el('circle', { class: `fill-${selected ? 'accent' : sectorClass(name)} ${selected ? 'sel-ring' : 'ring'}`, cx: sx(v), cy: cy, r: selected ? 6.5 : 5 });
+        const dot = el('circle', { class: `fill-${selected ? 'accent' : sectorClass(name)} ${selected ? 'sel-ring' : 'ring'}${dim}`, cx: sx(v), cy: cy, r: selected ? 6.5 : 5 });
         g.appendChild(dot);
         tween(dot, `${boxId}|dot|${name}`, { x: sx(v), y: 0 });
       }
@@ -807,7 +824,7 @@
     const narrow = W < 420;
     const H = 290;
 
-    // 突顯：變動幅度前 3 名 + 目前選取的；其餘淡灰細線
+    // 突顯：變動幅度前 3 名 + 目前選取的；其餘淺藍細線
     const movers = names.slice().sort((a, b) => changeSize(metric, b) - changeSize(metric, a)).slice(0, HIGHLIGHT_TOP);
     const highlighted = movers.slice();
     if (state.selected && names.includes(state.selected) && !highlighted.includes(state.selected)) highlighted.push(state.selected);
@@ -992,7 +1009,7 @@
       ? '註：依實質總薪資由高到低排序。實質總薪資是報表提供的數字，已扣除物價（以民國 110 年為基期），只有 17 個大類有資料。各行業的數字是平均值，不能相加。'
       : '註：依總薪資由高到低排序。總薪資 = 經常性薪資 + 非經常性薪資（獎金、加班費等），是名目金額，未扣除物價。各行業的數字是平均值，不能相加。';
     $('note-trend-salary').textContent =
-      `註：突顯規則：彩色粗線是 109→114 年${pay}漲跌百分比（取絕對值）最大的 3 個行業，加上目前選取的行業，右端直接標出名稱；其餘行業是淡灰細線。`
+      `註：突顯規則：彩色粗線是 109→114 年${pay}漲跌百分比（取絕對值）最大的 3 個行業，加上目前選取的行業，右端直接標出名稱；其餘行業是淺藍細線。`
       + (useReal() ? '實質薪資已扣除物價（110 年幣值）。' : '名目薪資未扣除物價，上升不等於購買力增加。')
       + '縱軸不從 0 開始。直線標出目前選的年份。';
     $('note-hourly').textContent =
