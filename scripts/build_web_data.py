@@ -7,11 +7,16 @@
 用法：
     uv run scripts/build_web_data.py
 
-INDICATORS 是網頁會用到、而且每個行業每一年都有值的指標。
-PARTIAL_INDICATORS 只有部分行業有值（實質總薪資：部門、17 個大類和少數中類），
+網頁主題：各行業進入率與退出率的差異，以及它們和薪資的關係。
+
+INDICATORS 是網頁會用到、而且每個行業每一年都有值的指標（進入率、退出率、薪資、工時、人數）。
+PARTIAL_INDICATORS 只有部分行業有值（實質經常性薪資、實質總薪資：部門、17 個大類和少數中類），
 只收 6 年都有值的行業，網頁端要自己判斷某個行業有沒有這個指標。
 完全無資料的 6 個勞動報酬指標不放進去。
-時薪不存在這裡：網頁用「總薪資 ÷ 總工時」現算。
+
+自行計算的指標不存在這裡，網頁用下面的數字現算：
+流動率 =（進入率 + 退出率）÷ 2、淨進入率 = 進入率 − 退出率、
+時薪 = 總薪資 ÷ 總工時、人數指數 = 各年人數 ÷ 109 年人數 × 100。
 """
 
 from __future__ import annotations
@@ -27,16 +32,15 @@ OUT_PATH = ROOT / "docs" / "data.json"
 
 # 網頁用的 key -> CSV 的 indicator
 INDICATORS = {
-    "salary": "每人每月總薪資",
+    "entry": "進入率",
+    "exit": "退出率",
     "regular": "每人每月經常性薪資",
-    "irregular": "每人每月非經常性薪資",
-    "overtime_pay": "每人每月加班費",
+    "salary": "每人每月總薪資",
     "hours": "總工時",
-    "normal_hours": "正常工時",
-    "overtime_hours": "加班工時",
     "employees": "受僱員工人數",
 }
 PARTIAL_INDICATORS = {
+    "real_regular": "每人每月實質經常性薪資",
     "real_salary": "每人每月實質總薪資",
 }
 # 這些層級的行業必須全部有值，否則網頁的「實質」切換會壞掉
